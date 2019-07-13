@@ -9,7 +9,6 @@ import main
 
 application = Flask(__name__, instance_relative_config=True)
 
-application = Flask(__name__, instance_relative_config=True)
 #Debug or Release
 application.config.update(
 		DEBUG = True,
@@ -24,12 +23,20 @@ def main_app(test_config = None):
 	init_database.init_db()
 	#페이지들
 	application.register_blueprint(main.BP)
-	application.register_blueprint(auth.BP)
+	#application.register_blueprint(auth.BP)
 	#application.register_blueprint(board.BP)
 	#application.register_blueprint(search.BP)
 	#application.register_blueprint(admin.BP)
 	#application.register_blueprint(statistics.BP)
 	application.register_blueprint(error.BP)
+
+@application.before_request
+def before_request():
+	get_db()
+
+@application.teardown_request
+def teardown_request(exception):
+	close_db()
 
 main_app()
 if __name__ == '__main__':
