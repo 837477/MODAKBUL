@@ -5,6 +5,7 @@ user_id INT NOT NULL,
 post_name VARCHAR(100) NULL,
 post_content VARCHAR(1500) NOT NULL,
 post_view INT NOT NULL DEFAULT 0,
+post_date DATETIME NOT NULL,
 PRIMARY KEY(post_id),
 FOREIGN KEY(notice_id) REFERENCES notice(notice_id) ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(user_id) REFERENCES user(user_id) ON UPDATE CASCADE

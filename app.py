@@ -29,6 +29,7 @@ def main_app(test_config = None):
 	#application.register_blueprint(search.BP)
 	#application.register_blueprint(admin.BP)
 	#application.register_blueprint(statistics.BP)
+	#application.register_blueprint(vote.BP)
 	application.register_blueprint(error.BP)
 
 @application.before_request
@@ -40,5 +41,8 @@ def teardown_request(exception):
 	close_db()
 
 main_app()
+
 if __name__ == '__main__':
     application.run(host='localhost', port=5000, debug=True)
+
+    
