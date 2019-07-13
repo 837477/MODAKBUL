@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS user_like(
+CREATE TABLE IF NOT EXISTS comment(
 comment_id INT NOT NULL,
 post_id INT NOT NULL,
 user_id INT NOT NULL,
