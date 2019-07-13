@@ -6,6 +6,7 @@ from global_func import *
 import init_database
 #apps
 import main
+import error
 
 application = Flask(__name__, instance_relative_config=True)
 
