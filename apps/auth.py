@@ -1,31 +1,71 @@
-from flask import Blueprint, render_template, request, jsonifiy, g
-from werkzeug.security import check_password_hash, generate_password_hash
-from falsk_jwt_extended import create_access_token, get_jwt_identity, jwt_required
-from sejong_account import *
+from flask import *
+from werkzeug.security import *
+from flask_jwt_extended import *
 from global_func import *
+from sejong_account import sejong_api
 
 BP = Blueprint('auth', __name__)
 
 ###################################################
 #페이지
- @BP.route('/sign-in')
- def sign_in():
- 	return render_template('auth/sign_in.html')
- ###################################################
+@BP.route('/sign-in')
+def sign_in():
+	return render_template('auth/index.html')
+###################################################
 
 #로그인 및 회원가입(토큰발행)
 @BP.route('/sign_in_up', methods=['POST'])
 def login_modakbul():
-	ID = request.form['id']
-	PW = request.form['pw']
+	USER_ID = request.form['id']
+	USER_PW = request.form['pw']
 	
-	user = select_id(g.db, user_id)
+	user = select_id(g.db, USER_ID)
 	if user is None:
-		sejong_api_result = sejong_api(ID, PW)
-
+		sejong_api_result = sejong_api(USER_ID, USER_PW)
 		if not sejong_api_result['result']:
-			return jsonifiy(result = "You are not sejong")
+			return jsonify(result = "You are not sejong")
 		else:
 			db_data = (
-				int(ID)
+				int(USER_ID),
+				generate_password_hash(USER_PW),
+				sejong_api_result['name'],
+				sejong_api_result['major'],
+				sejong_api_result['name'],
+				"1"
 				)
+			with g.db.cursor() as cursor:
+				sql = open("database/auth_user_register.sql").read()
+				cursor.execute(sql, db_data)
+			g.db.commit()
+	user = select_id(g.db, USER_ID)
+
+	if check_password_hash(user['user_pw'], USER_PW):
+		return jsonify(
+			result = "success",
+			access_token = create_access_token(identity = USER_ID, expires_delta=False)
+			)
+	else:
+		return jsonify(result = "wrong info")
+
+#회원정보 반환
+@BP.route('/userinfo')
+@jwt_required
+def get_userinfo():
+	user = select_id(g.db, get_jwt_identity())
+	if user is None: abort(403)
+	userinfo = {}
+	with g.db.cursor() as cursor:
+		sql = open("database/auth_userinfo.sql").read()
+		cursor.excute(sql, (user['user_id']))
+		userinfo.update(cursor.fetchone())
+		userinfo.update({"result":"success"})
+	return jsonifiy(userinfo)
+
+# 사용자 관련 함수##############################################
+def select_id(db, string):
+	with db.cursor() as cursor: 
+		sql = "SELECT * FROM user WHERE user_id = %s LIMIT 1"
+		cursor.execute(sql, (string,))
+		result = cursor.fetchone()
+		return result
+

@@ -1,17 +1,17 @@
-from MySQLdb import connect
+from MySQLdb import *
 from flask import g
 
-IP = 'localhost'
-ID = "root"
-PW = "imlisgod"
+DB_IP = 'localhost'
+DB_ID = "root"
+DB_PW = "imlisgod"
 
 #MySQL 서버에 로그인하고 연결하는 작업
 def server_connect():
-    db = connect(host=IP , user=ID, password=PW, charset='utf8mb4')
+    db = connect(host=DB_IP , user=DB_ID, password=DB_PW, charset='utf8mb4')
     return db
 #MySQL 서버에 로그인하고 모닥불 DB와 연결하는 작업
 def db_connect():
-    db = connect(host=IP, user=ID, password=PW, db='modakbul', charset='utf8mb4')
+    db = connect(host=DB_IP, user=DB_ID, password=DB_PW, db='modakbul', charset='utf8mb4', cursorclass=cursors.DictCursor)
     return db
 
 def get_db():

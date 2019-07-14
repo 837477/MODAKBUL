@@ -1,0 +1,1 @@
+INSERT INTO user (user_id, user_pw, user_name, user_major, user_nickname, user_access) VALUES (%s, %s, %s, %s, %s, %s);

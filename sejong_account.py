@@ -18,3 +18,7 @@ def sejong_api(id, pw):
 			"name":name,
 			"major":major
 			}
+if __name__ == '__main__':
+	id = input("학교 아이디: ")
+	pw = getpass.getpass("비밀번호: ")
+	print(sejong_api(id,pw))
