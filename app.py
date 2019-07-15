@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager
 from global_func import *
 from init_database import *
 #apps
-import main, auth
+import main, auth, board
 import error
 
 application = Flask(__name__, instance_relative_config=True)

@@ -74,3 +74,12 @@ function getuserinfo()
       console.log(json);
    });
 }
+
+function get_notice()
+{
+  var a_jax = A_JAX('http://localhost:5000/get-post/1', "GET");
+   $.when(a_jax).done(function(){
+      var json = a_jax.responseJSON;
+      console.log(json);
+   });
+}
