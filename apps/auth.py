@@ -14,7 +14,7 @@ def sign_in():
 ###################################################
 
 #로그인 및 회원가입(토큰발행)
-@BP.route('/sign_in_up', methods=['POST'])
+@BP.route('/sign-in-up', methods=['POST'])
 def login_modakbul():
 	USER_ID = request.form['id']
 	USER_PW = request.form['pw']
@@ -38,7 +38,6 @@ def login_modakbul():
 				cursor.execute(sql, db_data)
 			g.db.commit()
 	user = select_id(g.db, USER_ID)
-
 	if check_password_hash(user['user_pw'], USER_PW):
 		return jsonify(
 			result = "success",
@@ -55,13 +54,23 @@ def get_userinfo():
 	if user is None: abort(403)
 	userinfo = {}
 	with g.db.cursor() as cursor:
-		sql = open("database/auth_userinfo.sql").read()
-		cursor.excute(sql, (user['user_id']))
+		#회원 정보 반환
+		sql = "SELECT user_id, user_name, user_major, user_nickname, user_access FROM user WHERE user_id = %s;"
+		cursor.execute(sql, (user['user_id'],))
 		userinfo.update(cursor.fetchone())
+		#회원이 좋아요한 글 반환
+		sql = "SELECT post_id FROM user_like WHERE user_id = %s;"
+		cursor.execute(sql, (user['user_id'],))
+		userinfo.update({"like_posts": cursor.fetchall()})
+		#회원이 작성한 글 반환
+		sql = "SELECT * FROM post WHERE user_id = %s;"
+		cursor.execute(sql, (user['user_id'],))
+		userinfo.update({"my_post": cursor.fetchall()})
 		userinfo.update({"result":"success"})
-	return jsonifiy(userinfo)
+	return jsonify(userinfo)
 
-# 사용자 관련 함수##############################################
+###############################################
+#사용자 관련 함수
 def select_id(db, string):
 	with db.cursor() as cursor: 
 		sql = "SELECT * FROM user WHERE user_id = %s LIMIT 1"

@@ -1,1 +1,0 @@
-SELECT * FROM WHERE user_id = %s;
