@@ -1,9 +1,11 @@
 from MySQLdb import *
 from flask import g
 
+###################################
 DB_IP = 'localhost'
 DB_ID = "root"
 DB_PW = "imlisgod"
+###################################
 
 #MySQL 서버에 로그인하고 연결하는 작업
 def server_connect():
@@ -34,32 +36,64 @@ def init_db():
             sql = "CREATE DATABASE IF NOT EXISTS modakbul"
             cursor.execute(sql)
         db.commit()
-    except:
-        print("DB init Failed")
+    except Exception as ex:
+        print("Db init Failed")
+        print(ex)
 
     db.select_db('modakbul')
     #DB 테이블 생성
     with db.cursor() as cursor:
+        sql = open("database/table/table_major.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_tag.sql").read()
+        cursor.execute(sql)
         sql = open("database/table/table_user.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_notice.sql").read()
+        sql = open("database/table/table_user_tag.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_post.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_attachments.sql").read()
+        sql = open("database/table/table_post_tag.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_user_like.sql").read()
+        sql = open("database/table/table_post_comment.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_comment.sql").read()
+        #post_like는 유저가 삭제되도 라이크 유지시키려 했으나 프라이머리키를 해야해서 낫 널을 못시킴.
+        sql = open("database/table/table_post_like.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_blacklist.sql").read()
+        sql = open("database/table/table_post_attach.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_vote_title.sql").read()
+        sql = open("database/table/table_vote.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_vote_content.sql").read()
+        sql = open("database/table/table_vote_tag.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_vote_content_type.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_vote_que.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_vote_select.sql").read()
         cursor.execute(sql)
+        sql = open("database/table/table_vote_attach.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_account.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_account_tag.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_account_form.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_account_attach.sql").read()
+        cursor.execute(sql)
+
+
+        sql = open("database/test_data.sql","r")
+        while True:
+            line = sql.readline()
+            if not line: break
+            try:
+                cursor.execute(line)
+            except Exception as e:
+                print(e)
+                continue
+
     db.commit()
     db.close()
 

@@ -55,7 +55,7 @@ def get_userinfo():
 	userinfo = {}
 	with g.db.cursor() as cursor:
 		#회원 정보 반환
-		sql = "SELECT user_id, user_name, user_major, user_nickname, user_access FROM user WHERE user_id = %s;"
+		sql = "SELECT user_id, user_name, userr_major, user_nickname, user_access FROM user WHERE user_id = %s;"
 		cursor.execute(sql, (user['user_id'],))
 		userinfo.update(cursor.fetchone())
 		#회원이 좋아요한 글 반환
@@ -68,6 +68,20 @@ def get_userinfo():
 		userinfo.update({"my_post": cursor.fetchall()})
 		userinfo.update({"result":"success"})
 	return jsonify(userinfo)
+
+#닉네임 변경
+@BP.route('/user_nickname_edit', methods=['POST'])
+@jwt_required
+def nickname_edit():
+	new_nickname = request.form['new_nickname']
+	user = select_id(g.db, get_jwt_identity())
+
+	if user is None: abort(403)
+
+	with g.db.cursor() as cursor:
+		sql = "UPDATE user SET user_nickname=%s WHERE user_id=%s;"
+		cursor.execute(sql, (new_nickname, user['user_id'],))
+		g.db.commit()
 
 ###############################################
 #사용자 관련 함수

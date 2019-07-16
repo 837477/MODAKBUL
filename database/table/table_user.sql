@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS user(
-user_id INT NOT NULL,
-user_pw VARCHAR(100) NOT NULL,
-user_name VARCHAR(20) NOT NULL,
-user_major VARCHAR(20) NOT NULL,
-user_nickname VARCHAR(20) NULL,
-user_access INT(1) unsigned default 1,
-PRIMARY KEY(user_id)
+user_id VARCHAR(20) NOT NULL,
+pw VARCHAR(150) NOT NULL,
+user_name VARCHAR(10) NOT NULL,
+major_id TINYINT NULL,
+nick VARCHAR(30) NOT NULL,
+introduce VARCHAR(50) NULL,
+PRIMARY KEY (user_id),
+FOREIGN KEY (major_id) REFERENCES major(major_id) ON DELETE SET NULL ON UPDATE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
