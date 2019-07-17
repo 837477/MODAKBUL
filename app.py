@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from global_func import *
 from init_database import *
+
 #apps
 import main, auth, board
 import error

@@ -43,8 +43,6 @@ def init_db():
     db.select_db('modakbul')
     #DB 테이블 생성
     with db.cursor() as cursor:
-        sql = open("database/table/table_major.sql").read()
-        cursor.execute(sql)
         sql = open("database/table/table_tag.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_user.sql").read()
@@ -83,18 +81,9 @@ def init_db():
         sql = open("database/table/table_account_attach.sql").read()
         cursor.execute(sql)
 
-
-        sql = open("database/test_data.sql","r")
-        while True:
-            line = sql.readline()
-            if not line: break
-            try:
-                cursor.execute(line)
-            except Exception as e:
-                print(e)
-                continue
-
     db.commit()
     db.close()
+
+
 
 

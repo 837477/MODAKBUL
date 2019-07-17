@@ -25,17 +25,16 @@ def login_modakbul():
 		if not sejong_api_result['result']:
 			return jsonify(result = "You are not sejong")
 		else:
-			db_data = (
-				int(USER_ID),
+			user_data = (
+				USER_ID,
 				generate_password_hash(USER_PW),
-				sejong_api_result['name'],
-				sejong_api_result['major'],
-				sejong_api_result['name'],
-				"1"
+				sejong_api_result['name']
 				)
 			with g.db.cursor() as cursor:
-				sql = open("database/auth_user_register.sql").read()
-				cursor.execute(sql, db_data)
+				sql = "INSERT INTO user(user_id, pw, user_name) VALUES (%s, %s, %s);"
+				cursor.execute(sql, user_data)
+				sql = "INSERT INTO user_tag(user_id, tag_id) VALUES (%s, %s);"
+				cursor.execute(sql, (USER_ID, sejong_api_result['major'],))
 			g.db.commit()
 	user = select_id(g.db, USER_ID)
 	if check_password_hash(user['user_pw'], USER_PW):
@@ -44,7 +43,7 @@ def login_modakbul():
 			access_token = create_access_token(identity = USER_ID, expires_delta=False)
 			)
 	else:
-		return jsonify(result = "wrong info")
+		return jsonify(result = "incorrect password")
 
 #회원정보 반환
 @BP.route('/userinfo')
