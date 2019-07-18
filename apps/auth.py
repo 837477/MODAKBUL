@@ -77,7 +77,4 @@ def user_color():
 	change_user_colore(g.db, new_color, user['user_id'])
 	
 	return jsonify(result = "success")
-
-
-
-
+	

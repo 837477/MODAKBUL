@@ -43,6 +43,8 @@ def init_db():
     db.select_db('modakbul')
     #DB 테이블 생성
     with db.cursor() as cursor:
+        sql = open("database/table/table_board.sql").read()
+        cursor.execute(sql)
         sql = open("database/table/table_tag.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_user.sql").read()

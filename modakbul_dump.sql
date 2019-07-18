@@ -127,6 +127,30 @@ LOCK TABLES `account_tag` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `board`
+--
+
+DROP TABLE IF EXISTS `board`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `board` (
+  `board_url` varchar(20) NOT NULL,
+  `board_name` varchar(20) NOT NULL,
+  PRIMARY KEY (`board_url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `board`
+--
+
+LOCK TABLES `board` WRITE;
+/*!40000 ALTER TABLE `board` DISABLE KEYS */;
+INSERT INTO `board` VALUES ('갤러리','갤러리'),('공모전','공모전'),('공지','공지사항'),('민원','민원게시판'),('장부','학생회비 사용내역'),('장부_데이터사이언스학과','데이터사이언스학과'),('장부_디자인이노베이션','디자인이노베이션'),('장부_만화애니메이션텍','만화애니메이션텍'),('장부_소프트웨어융합대학','소프트웨어융합대학'),('장부_소프트웨어학과','소프트웨어학과'),('장부_정보보호학과','정보보호학과'),('장부_지능기전공학부','지능기전공학부'),('장부_컴퓨터공학과','컴퓨터공학과');
+/*!40000 ALTER TABLE `board` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `post`
 --
 
@@ -284,7 +308,7 @@ CREATE TABLE `tag` (
 
 LOCK TABLES `tag` WRITE;
 /*!40000 ALTER TABLE `tag` DISABLE KEYS */;
-INSERT INTO `tag` VALUES ('ADMIN',0),('갤러리',0),('공모전',0),('공지',0),('데이터사이언스학과',3),('디자인이노베이션',3),('만화애니메이션텍',3),('민원',2),('소프트웨어융합대학',3),('소프트웨어학과',3),('장부',0),('정보보호학과',3),('지능기전공학부',3),('컴퓨터공학과',3);
+INSERT INTO `tag` VALUES ('ADMIN',0),('갤러리',0),('공모전',0),('공지',0),('데이터사이언스학과',3),('디자인이노베이션',3),('만화애니메이션텍',3),('민원',2),('소프트웨어융합대학',3),('소프트웨어학과',3),('장부',0),('정보보호학과',3),('지능기전공학부',3),('컴퓨터공학과',3),('학생회소개',0);
 /*!40000 ALTER TABLE `tag` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -337,7 +361,7 @@ CREATE TABLE `user_tag` (
 
 LOCK TABLES `user_tag` WRITE;
 /*!40000 ALTER TABLE `user_tag` DISABLE KEYS */;
-INSERT INTO `user_tag` VALUES ('ADMIN','ADMIN'),('17011584','데이터사이언스학과'),('16011075','소프트웨어융합대학'),('16011089','정보보호학과'),('16011075','컴퓨터공학과'),('16011092','컴퓨터공학과');
+INSERT INTO `user_tag` VALUES ('ADMIN','ADMIN'),('17011584','데이터사이언스학과'),('16011089','정보보호학과'),('16011075','컴퓨터공학과'),('16011092','컴퓨터공학과');
 /*!40000 ALTER TABLE `user_tag` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -507,4 +531,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-07-18 22:04:52
+-- Dump completed on 2019-07-19  0:47:29
