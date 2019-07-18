@@ -32,7 +32,7 @@ def change_user_color(db, user_id, color):
 	with db.cursor() as cursor:
 		sql = "UPDATE user SET user_color=%s WHERE user_id=%s;"
 		cursor.execute(sql, (color, user_id,))
-	g.db.commit()
+	db.commit()
 
 #보드 관련#####################################################
 

@@ -71,10 +71,6 @@ def get_userinfo():
 def user_color():
 	new_color = request.form['new_color']
 	user = select_user_id(g.db, get_jwt_identity())
-
 	if user is None: abort(400)
-
-	change_user_colore(g.db, new_color, user['user_id'])
-	
+	change_user_color(g.db, user['user_id'], new_color)
 	return jsonify(result = "success")
-	
