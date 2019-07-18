@@ -27,7 +27,7 @@ def main_app(test_config = None):
 	#페이지들
 	application.register_blueprint(main.BP)
 	application.register_blueprint(auth.BP)
-	application.register_blueprint(board.BP)
+	#application.register_blueprint(board.BP)
 	#application.register_blueprint(search.BP)
 	#application.register_blueprint(admin.BP)
 	#application.register_blueprint(statistics.BP)

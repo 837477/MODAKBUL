@@ -298,7 +298,7 @@ CREATE TABLE `user` (
   `user_id` varchar(20) NOT NULL,
   `pw` varchar(150) NOT NULL,
   `user_name` varchar(10) NOT NULL,
-  `user_color` varchar(20) NOT NULL DEFAULT 'D8D8D8',
+  `user_color` varchar(20) NOT NULL DEFAULT '#D8D8D8',
   `introduce` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
