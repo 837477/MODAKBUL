@@ -56,14 +56,14 @@ def get_userinfo():
 	#DB에 없는 유저임. 뭔가 이상하게 접근한 사람
 	if user is None: abort(400)
 
-	user_major = select_user_major(g.db, user['user_id'])
+	user_tag = select_user_tag(g.db, user['user_id'])
 
 	return jsonify(
 		result = "success",
 		user_id = user['user_id'],
 		user_name = user['user_name'],
 		user_color = user['user_color'],
-		user_major = user_major)
+		user_tag = user_tag)
 
 #회원 컬러 변경
 @BP.route('/user-color', methods=['POST'])

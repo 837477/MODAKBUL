@@ -11,13 +11,21 @@ def select_user_id(db, user_id):
 		result = cursor.fetchone()
 		return result
 
+#사용자 태그 반환
+def select_user_tag(db, user_id):
+	with db.cursor() as cursor:
+		sql = "SELECT tag_id FROM user_tag WHERE user_id=%s;"
+		cursor.execute(sql, (user_id,))
+		result = cursor.fetchall()
+		return result
+
 #사용자 학과 반환
 def select_user_major(db, user_id):
 	with db.cursor() as cursor:
 		sql = "SELECT tag_id FROM user_tag WHERE user_id=%s;"
 		cursor.execute(sql, (user_id,))
-		result = cursor.fetchone()
-		return result['tag_id']
+		result = cursor.fetchall()
+		return result
 
 #사용자 컬러 변경
 def change_user_color(db, user_id, color):
