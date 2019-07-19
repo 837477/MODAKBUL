@@ -44,3 +44,61 @@ def select_board(db):
 		result = cursor.fetchall()
 	return result 
 
+#태그가 속해있는 글 아이디(post_id)들 반환해주는 쿼리문 스트링 반환 (중복 가능)
+def select_posts_id_SQL(tag_list):	
+	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
+	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
+	i = 2
+	result_sql = ""
+
+	for tag in tag_list:
+		if tag == tag_list[0]:
+			result_sql +=(sql %(tag))
+
+		elif tag != tag_list[len(tag_list)-1]:
+			result_sql +=(add_sql %(tag, i))
+			i +=1
+			
+		else:
+			result_sql +=(add_sql %(tag, i))
+			i +=1
+			result_sql += "ON P1.post_id = P2.post_id "
+			for i in range(3, i):
+				temp = "AND P1.post_id = P%s.post_id "
+				temp = (temp %(i))
+				result_sql += temp
+			#result_sql += ';'
+	return result_sql
+
+#태그가 속해있는 글들 반환
+def select_posts_list(db, post_in_tag_SQL):
+	with db.cursor() as cursor:
+		sql = 'SELECT * from V_post V JOIN (' + post_in_tag_SQL + ') R ON V.post_id = R.post_id;'
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#파일 업로드
+def insert_attach(db, post_id, file_name):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO post_attach (post_id, file_path) VALUES (%s, %s);"
+		cursor.execute(sql, (post_id, file_name,))
+	db.commit()
+	return "success"
+
+#포스트 업로드
+def insert_post(db, user_id, title, content, anony):
+
+	with db.cursor() as cursor:
+		sql = "INSERT INTO post (user_id, post_title, post_content, post_anony) VALUES (%s, %s, %s, %s);"
+		cursor.execute(sql, (user_id, title, content, anony,))
+
+		sql = "SELECT MAX(post_id) AS post_id FROM post"
+		cursor.execute(sql)
+
+		post_id = cursor.fetchone()
+
+	db.commit()
+
+	return post_id['post_id']
+

@@ -82,6 +82,8 @@ def init_db():
         cursor.execute(sql)
         sql = open("database/table/table_account_attach.sql").read()
         cursor.execute(sql)
+        sql = open("database/table/table_view_post.sql").read()
+        cursor.execute(sql)
 
     db.commit()
     db.close()

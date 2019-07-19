@@ -8,12 +8,12 @@ header = {
 	'Authorization':"Bearer " + token
 }
 #Debug Here
-url = "http://localhost:5000/user-color"
+url = "http://localhost:5000/posts/공모전_소프트웨어융합대학"
 data = {
 #POST
-"new_color": "#FFFFFF"
+
 }
 ######
-#html = requests.get(url, headers =header, data = data).content
-html = requests.post(url, headers =header, data = data).content
+html = requests.get(url, headers =header, data = data).content
+#html = requests.post(url, headers =header, data = data).content
 pprint(html)
