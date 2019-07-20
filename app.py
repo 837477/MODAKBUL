@@ -38,6 +38,12 @@ def main_app(test_config = None):
 def before_request():
 	get_db()
 
+'''
+@application.after_request
+def after_request():
+	close_db()
+'''
+
 @application.teardown_request
 def teardown_request(exception):
 	close_db()
