@@ -12,7 +12,7 @@ def sign_in():
 	return render_template('auth/index.html')
 ###################################################
 
-#로그인 및 회원가입(토큰발행)
+#로그인 및 회원가입(토큰발행) (OK)
 @BP.route('/sign-in-up', methods=['POST'])
 def login_modakbul():
 	USER_ID = request.form['id']
@@ -42,7 +42,7 @@ def login_modakbul():
 	else:
 		return jsonify(result = "incorrect password")
 
-#회원정보 반환
+#회원정보 반환 (OK)
 @BP.route('/get-userinfo')
 @jwt_required
 def get_userinfo():
@@ -59,7 +59,7 @@ def get_userinfo():
 		user_color = user['user_color'],
 		user_tages = tages)
 
-#회원 컬러 변경
+#회원 컬러 변경 (OK)
 @BP.route('/user-color', methods=['POST'])
 @jwt_required
 def user_color():

@@ -26,31 +26,58 @@ def image2():
 #게시판 반환(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/board')
 def get_board():
+	result = {}
 	board = select_board(g.db)
-	return jsonify(board)
 
-#해당 게시판의 글들 불러오기(페이지네이션)
+	result.update(
+		board = board,
+		result = "success")
+	return jsonify(result)
+
+#해당 게시판의 글들 불러오기(페이지네이션) (OK)
 @BP.route('/posts/<string:tag_string>/<int:page>')
 def get_posts_page(tag_string, page):
+	result = {}
+
 	tag_list = tag_string.split('_')
 	post_in_tag_SQL = select_posts_in_tag(tag_list)
-	result = select_posts_page(g.db, post_in_tag_SQL, page)
+	
+	posts = select_posts_page(g.db, post_in_tag_SQL, page)
+
+	result.update(
+		posts = posts,
+		result = "success")
 	return jsonify(result)
 
-#해당 게시판의 글들 불러오기(전체)
+#해당 게시판의 글들 불러오기(전체) (OK)
 @BP.route('/posts/<string:tag_string>')
 def get_posts_list(tag_string):
+	result = {}
+	
 	tag_list = tag_string.split('_')
 	post_in_tag_SQL = select_posts_in_tag(tag_list)
-	result = select_posts_list(g.db, post_in_tag_SQL)
+	
+	posts = select_posts_list(g.db, post_in_tag_SQL)
+
+	result.update(
+		posts = posts,
+		result = "success")
 	return jsonify(result)
 
-#게시물 업로드
+#해당 게시글 불러오기(단일) (OK)
+@BP.route('/post/<int:post_id>')
+def get_post(post_id):
+	result = {}
+	post = select_post(g.db, post_id)
+	result.update(
+		post = post,
+		result = "success")
+	return result
+
+#게시물 업로드 (OK)
 @BP.route('/post_upload', methods=['POST'])
 @jwt_required
 def post_upload():
-	print("\n\n\n\n\n\n")
-
 	user = select_user_id(g.db, get_jwt_identity())
 	if user is None: abort(403)
 
@@ -64,20 +91,17 @@ def post_upload():
 
 	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
 	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
-	print("\n\n\n\n\n\n")
-	print(post_id)
+
 	if post_id is None:
 		return jsonify(result = "Fail")
 	else:
-		print("\n\n\n\n 파일올리자!")
-		print(files)
 		#첨부할 파일이 있는지 확인
 		if files is not None:
 			for file in files:
 				#확장자 검색!
 				if secure_filename(file.filename).split('.')[-1] in ALLOWED_EXTENSIONS:
 					path_name = to_hash(user['user_id'] + datetime.today().strftime("%Y%m%d%H%M%S") + file.filename)
-					path_name_S = None#그냥 만들어둠
+					path_name_S = None #그냥 만들어둠
 
 					#이미지 인지 파악
 					if secure_filename(file.filename).split('.')[-1] in IMG_EXTENSIONS:
@@ -101,22 +125,33 @@ def post_upload():
 
 		return jsonify(result = "success")
 
-
-#갤러리 글int
+#갤러리 글 목록 (OK)
 @BP.route('/image/<int:page>')
 def image(page):
 	result = {}
 
 	post_in_tag_SQL = select_posts_in_tag(['갤러리'])
 	
-	gallery = select_gallery_post(g.db, post_in_tag_SQL, page)
+	g_posts = select_gallery_posts(g.db, post_in_tag_SQL, page)
+
+	for post in g_posts:
+		files = []
+		db_files = select_files(g.db, post['post_id'])
+			
+		for file in db_files:
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S_":
+				files.append(file['file_path'])
+
+		post.update(files = files)
 
 	result.update(
-		posts = gallery,
+		posts = g_posts,
 		result = "success")
 
 	return jsonify(result)
 
+
+#함수 #########################################################
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

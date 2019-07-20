@@ -48,12 +48,12 @@ def change_user_color(db, user_id, color):
 #보드 테이블 반환
 def select_board(db):
 	with db.cursor() as cursor:
-		sql = "SELECT * FROM board;"
+		sql = "SELECT board_name, board_url AS board_tag FROM board;"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result 
 
-#태그가 속해있는 글 아이디(post_id)들 반환해주는 스트링(쿼리문) 반환 (중복 가능)
+#태그가 속해있는 글의 아이디(post_id)들을 반환 (쿼리문형식, 중복가능)
 def select_posts_in_tag(tag_list):	
 	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
 	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
@@ -82,16 +82,24 @@ def select_posts_in_tag(tag_list):
 #태그가 속해있는 글들(ALL) 반환 (페이지네이션)
 def select_posts_page(db, post_in_tag_SQL, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT * from V_post V JOIN (' + post_in_tag_SQL + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, post_title, post_date, post_view, like_cnt, comment_cnt, attach_cnt, post_anony  FROM V_post V JOIN (' + post_in_tag_SQL + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 	return result
 #태그가 속해있는 글들(ALL) 반환 (전체)
 def select_posts_list(db, post_in_tag_SQL):
 	with db.cursor() as cursor:
-		sql = 'SELECT * from V_post V JOIN (' + post_in_tag_SQL + ') R ON V.post_id = R.post_id;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, post_title, post_date, post_view, like_cnt, comment_cnt, attach_cnt, post_anony  FROM V_post V JOIN (' + post_in_tag_SQL + ') R ON V.post_id = R.post_id;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
+	return result
+
+#해당 포스트 단일 반환
+def select_post(db, post_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT * FROM V_post WHERE post_id = %s;'
+		cursor.execute(sql, (post_id,))
+		result = cursor.fetchone()
 	return result
 
 #해당 포스트들의 파일들 반환
@@ -102,23 +110,12 @@ def select_files(db, post_id):
 		result = cursor.fetchall()
 	return result
 
-#포스트 글들 반환 (갤러리 전용, 페이지네이션)
-def select_gallery_post(db, post_in_tag_SQL, page):
+#포스트 미리보기 글들 반환 (갤러리 전용, 페이지네이션)
+def select_gallery_posts(db, post_in_tag_SQL, page):
 	with db.cursor() as cursor:
 		sql = 'SELECT post.post_id, post_title FROM post JOIN (' + post_in_tag_SQL + ') R ON post.post_id = r.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
-
-		for post in result:
-			db_files = select_files(db, post['post_id'])
-
-			files = []
-
-			for file in db_files:
-				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S_":
-					files.append(file['file_path'])
-
-			post.update(files = files)
 	return result
 
 #업로드 ###############################################
