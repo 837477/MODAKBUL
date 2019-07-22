@@ -2,9 +2,10 @@ from flask import *
 from werkzeug import *
 from flask_jwt_extended import *
 from PIL import Image
-import hashlib
 from datetime import datetime
 from db_func import *
+
+#import hashlib
 
 BP = Blueprint('board', __name__)
 
@@ -22,6 +23,7 @@ def imag2222e():
 def image2():
 	return render_template('board/index2.html')	
 ###################################################
+#포스트 반환
 
 #게시판 반환(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/board')
@@ -40,9 +42,32 @@ def get_posts_page(tag_string, page):
 	result = {}
 
 	tag_list = tag_string.split('_')
-	post_in_tag_SQL = select_posts_in_tag(tag_list)
+	tag_in_post_id = select_tag_in_posts(tag_list)
 	
-	posts = select_posts_page(g.db, post_in_tag_SQL, page)
+	posts = select_posts_page(g.db, tag_in_post_id, page)
+
+	#포스트 목록들을 불러온다
+	for post in posts:
+		img_cnt = 0
+		file_cnt = 0
+		
+		#해당 포스트 아이디의 파일들을 불러온다.
+		db_files = select_attach(g.db, post['post_id'])
+
+		#파일 개수 파악 시작!!
+		for file in db_files:
+			#이건 미리보기 파일이라 갯수에 포함X
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] != "S#":
+				#이미지냐? 아니면 일반파일이냐?
+				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
+					img_cnt += 1
+				else:
+					file_cnt += 1
+		
+		post.update(
+			img_cnt = img_cnt,
+			file_cnt = file_cnt
+			)
 
 	result.update(
 		posts = posts,
@@ -55,9 +80,32 @@ def get_posts_list(tag_string):
 	result = {}
 	
 	tag_list = tag_string.split('_')
-	post_in_tag_SQL = select_posts_in_tag(tag_list)
+	tag_in_post_id = select_tag_in_posts(tag_list)
 	
-	posts = select_posts_list(g.db, post_in_tag_SQL)
+	posts = select_posts_list(g.db, tag_in_post_id)
+
+	#포스트 목록들을 불러온다
+	for post in posts:
+		img_cnt = 0
+		file_cnt = 0
+		
+		#해당 포스트 아이디의 파일들을 불러온다.
+		db_files = select_attach(g.db, post['post_id'])
+
+		#파일 개수 파악 시작!!
+		for file in db_files:
+			#이건 미리보기 파일이라 갯수에 포함X
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] != "S#":
+				#이미지냐? 아니면 일반파일이냐?
+				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
+					img_cnt += 1
+				else:
+					file_cnt += 1
+		
+		post.update(
+			img_cnt = img_cnt,
+			file_cnt = file_cnt
+			)
 
 	result.update(
 		posts = posts,
@@ -69,77 +117,28 @@ def get_posts_list(tag_string):
 def get_post(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
+	attach = select_attach(g.db, post_id)
 	result.update(
 		post = post,
+		files = attach,
 		result = "success")
 	return result
 
-#게시물 업로드 (OK)
-@BP.route('/post_upload', methods=['POST'])
-@jwt_required
-def post_upload():
-	user = select_user_id(g.db, get_jwt_identity())
-	if user is None: abort(403)
-
-	title = request.form['title']
-	content = request.form['content']
-	anony = request.form['anony']
-	tages = request.form['tages']
-	files = request.files.getlist('files')
-
-	tag_list = tages.split('_')
-
-	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
-	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
-
-	if post_id is None:
-		return jsonify(result = "Fail")
-	else:
-		#첨부할 파일이 있는지 확인
-		if files is not None:
-			for file in files:
-				#확장자 검색!
-				if secure_filename(file.filename).split('.')[-1] in ALLOWED_EXTENSIONS:
-					path_name = to_hash(user['user_id'] + datetime.today().strftime("%Y%m%d%H%M%S") + file.filename)
-					path_name_S = None #그냥 만들어둠
-
-					#이미지 인지 파악
-					if secure_filename(file.filename).split('.')[-1] in IMG_EXTENSIONS:
-						path_name_S = 'S_' + path_name + '.' + secure_filename(file.filename).split('.')[-1]
-					
-					path_name += '.' + secure_filename(file.filename).split('.')[-1]
-
-					#DB에 파일경로 추가.
-					path_result = insert_attach(g.db, post_id, path_name, path_name_S)
-
-					if path_result == "success":
-						file.save('.' + UPLOAD_PATH + path_name)
-						if path_name_S is not None:
-							img = Image.open('.' + UPLOAD_PATH + path_name)
-							resize_img = img.resize((400,300))
-							resize_img.save('.' + UPLOAD_PATH + path_name_S)
-					else:
-						return jsonify(result = "Fail insert_file")
-				else:
-					return jsonify(result = "Wrong_extension")
-
-		return jsonify(result = "success")
-
-#갤러리 글 목록 (OK)
+#갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
 @BP.route('/image/<int:page>')
 def image(page):
 	result = {}
 
-	post_in_tag_SQL = select_posts_in_tag(['갤러리'])
+	tag_in_post_id = select_tag_in_posts(['갤러리'])
 	
-	g_posts = select_gallery_posts(g.db, post_in_tag_SQL, page)
+	g_posts = select_gallery_posts(g.db, tag_in_post_id, page)
 
 	for post in g_posts:
 		files = []
-		db_files = select_files(g.db, post['post_id'])
+		db_files = select_attach(g.db, post['post_id'])
 			
 		for file in db_files:
-			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S_":
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S#":
 				files.append(file['file_path'])
 
 		post.update(files = files)
@@ -150,16 +149,140 @@ def image(page):
 
 	return jsonify(result)
 
+#######################################################
+#포스트 업로드 및 수정 및 삭제
+
+#게시물 업로드 (OK)
+@BP.route('/post_upload', methods=['POST'])
+@jwt_required
+def post_upload():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(403)
+	
+	title = request.form['title']
+	content = request.form['content']
+	anony = request.form['anony']
+	tags = request.form['tags']
+	files = request.files.getlist('files')
+
+	tag_list = tags.split('_')
+
+	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
+	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
+
+	if post_id is None:
+		return jsonify(result = "Fail")
+	else:
+		#첨부할 파일이 있는지 확인
+		if files is not None:
+			for file in files:
+				
+				#확장자 검사 후,
+				#허용불가 확장자면 None!
+				#허용이면, 딕셔너리 형태로
+				#원본, 리사이즈 이름을 반환
+				allow_check = file_name_encode(file.filename)
+
+				if allow_check is not None:
+					#DB에 파일 추가.
+					path_result = insert_attach(g.db, post_id, allow_check['original'], allow_check['resize_s'])
+
+					if path_result == "success":
+						file.save('.' + UPLOAD_PATH + allow_check['original'])
+						if allow_check['resize_s'] is not None:
+							img = Image.open('.' + UPLOAD_PATH + allow_check['original'])
+							resize_img = img.resize((400,300))
+							resize_img.save('.' + UPLOAD_PATH + allow_check['resize_s'])
+					else:
+						return jsonify(result = "Fail save_file")
+				else:
+					return jsonify(result = "Wrong_file")
+
+		return jsonify(result = "success")
+
+#게시물 수정
+@BP.route('/post_update', methods=['POST'])
+@jwt_required
+def post_update():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	post_id = request.form['post_id']
+	title = request.form['title']
+	content = request.form['content']
+	anony = request.form['anony']
+	files = request.files.getlist('files')
+
+	#수정된 파일이 있을 수 있으니 우선 첨부파일 날리고 본다.
+	delete_attach(g.db, post_id)
+	
+	update_post(g.db, post_id, title, content, anony)
+
+	#새롭게 받은 파일이 있는지 확인 DB삽입 작업
+	if files is not None:
+		for file in files:
+
+			allow_check = file_name_encode(file.filename)
+
+			if allow_check is not None:
+				#DB에 파일 추가.
+				path_result = insert_attach(g.db, post_id, allow_check['original'], allow_check['resize_s'])
+
+				if path_result == "success":
+					file.save('.' + UPLOAD_PATH + allow_check['original'])
+					if allow_check['resize_s'] is not None:
+						img = Image.open('.' + UPLOAD_PATH + allow_check['original'])
+						resize_img = img.resize((400,300))
+						resize_img.save('.' + UPLOAD_PATH + allow_check['resize_s'])
+				else:
+					return jsonify(result = "Fail save_file")
+			else:
+					return jsonify(result = "Wrong_file")
+
+	return jsonify(
+		result = "success")
+
+#게시물 삭제
+@BP.route('/post_delete', methods=['POST'])
+@jwt_required
+def post_delete():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	post_id = request.form['post_id']
+
+	delete_post(g.db, post_id)
+
+	return jsonify(
+		result = "success")
 
 #함수 #########################################################
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+'''
 def to_hash(pw):
 	sha = hashlib.new('md5')
 	sha.update(pw.encode('utf-8'))
 	print(sha.hexdigest())
 	return sha.hexdigest()
+'''
+
+#파일 이름 변
+def file_name_encode(file_name):
+	#허용 확장자 / 길이인지 확인.
+	if secure_filename(file_name).split('.')[-1] in ALLOWED_EXTENSIONS and len(file_name) < 240:
+
+		#원본 파일!
+		path_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_' + file_name
+
+		#이미지 리사이즈 파일!
+		path_name_S = None
+
+		if secure_filename(file_name).split('.')[-1] in IMG_EXTENSIONS:
+			path_name_S = 'S#' + path_name 
+
+		return {"original": path_name, "resize_s": path_name_S}
+	
+	else:
+		return None
+
 
 

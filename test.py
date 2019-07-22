@@ -10,7 +10,6 @@ header = {
 #Debug Here
 url = "http://localhost:5000/posts/공모전_소프트웨어융합대학"
 data = {
-#POST
 
 }
 ######

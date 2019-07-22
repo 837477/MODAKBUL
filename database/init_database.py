@@ -52,6 +52,8 @@ def init_db():
         cursor.execute(sql)
         sql = open("database/table/table_post_attach.sql").read()
         cursor.execute(sql)
+        sql = open("database/table/table_post_url.sql").read()
+        cursor.execute(sql)
         sql = open("database/table/table_vote.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_vote_tag.sql").read()
