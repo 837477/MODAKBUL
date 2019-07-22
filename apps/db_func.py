@@ -175,7 +175,3 @@ def delete_attach(db, post_id):
 	db.commit()
 	return "success"
 
-
-
-#포스트 삭제
-#def delete_post(db, post_id):

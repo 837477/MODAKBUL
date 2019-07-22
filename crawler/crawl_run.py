@@ -8,6 +8,7 @@ import json
 import wevity
 import detizen
 import indeed
+import datetime
 warnings.filterwarnings("ignore")
 
 def crawl():
@@ -17,12 +18,22 @@ def crawl():
 		print("\n# " + target + " Crawling...")
 		code = target.split("_")[0]
 		code += ".proc('" + urls[target] + "')"
-		post_list += eval(code)
+		try:
+			post_list += eval(code)
+		except:
+			with open("crawl_error.log", "a") as f:
+				f.write(str(datetime.datetime.now()) + " " + target + "\n")
+
 	#with open("output/output.json", 'w') as outfile:
 	#	json.dump(post_list, outfile)
-	# title, content, date, url, tag, emg_url
+	# title, content, date, url, tag
 	return post_list
 
 if __name__ == '__main__':
-	pass#main()
+	post_list = crawl()
+	for post in post_list:
+		if 'img_url' in post:
+			print(post['img_url'])
+		else:
+			print("없어!")
 	
