@@ -118,9 +118,11 @@ def get_post(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
 	attach = select_attach(g.db, post_id)
+	comment = select_comment(g.db, post_id)
 	result.update(
 		post = post,
 		files = attach,
+		comment = comment,
 		result = "success")
 	return result
 
@@ -208,6 +210,11 @@ def post_update():
 	if user is None: abort(400)
 
 	post_id = request.form['post_id']
+
+	access = access_check_post(g.db, post_id, user['user_id'])
+	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
+	if access is not 1: abort(400)
+
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
@@ -216,7 +223,7 @@ def post_update():
 	#수정된 파일이 있을 수 있으니 우선 첨부파일 날리고 본다.
 	delete_attach(g.db, post_id)
 	
-	update_post(g.db, post_id, title, content, anony)
+	update_post(g.db, post_id, title, content, anony, user['user_id'])
 
 	#새롭게 받은 파일이 있는지 확인 DB삽입 작업
 	if files is not None:
@@ -251,10 +258,104 @@ def post_delete():
 
 	post_id = request.form['post_id']
 
+	access = access_check_post(g.db, post_id, user['user_id'])
+	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
+	if access is not 1: abort(400)
+
 	delete_post(g.db, post_id)
 
 	return jsonify(
 		result = "success")
+
+#######################################################
+#조회수 / 댓글 / 좋아요 처리
+
+#조회수 증가
+@BP.route('/view_up/<int:post_id>')
+def view_up(post_id):
+	result = update_view(g.db, post_id)
+
+	return jsonify(
+		result = result)
+
+#좋아요 등록
+@BP.route('/post_like_up/<int:post_id>')
+@jwt_required
+def post_like_up(post_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	result = insert_post_like(g.db, post_id, user['user_id'])
+
+	return jsonify(
+		result = result)
+
+#좋아요 취소
+@BP.route('/post_like_down/<int:post_id>')
+@jwt_required
+def post_like_down(post_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	result = delete_post_like(g.db, post_id, user['user_id'])
+
+	return jsonify(
+		result = result)
+
+#댓글 쓰기
+@BP.route('/comment_upload', methods=['POST'])
+@jwt_required
+def comment_upload():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	post_id = request.form['post_id']
+	comment = request.form['comment']
+	anony = request.form['anony']
+
+	result = insert_comment(g.db, post_id, user['user_id'], comment, anony)
+
+	return jsonify(
+		result = result)
+
+#댓글 수정
+@BP.route('/comment_update', methods=['POST'])
+@jwt_required
+def comment_update():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	comment_id = request.form['comment_id']
+
+	access = access_check_comment(g.db, comment_id, user['user_id'])
+	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
+	if access is not 1: abort(400)
+
+	comment = request.form['comment']
+	anony = request.form['anony']
+
+	result = update_comment(g.db, comment_id, comment, anony, user['user_id'])
+
+	return jsonify(
+		result = result)
+
+#댓글 삭제
+@BP.route('/comment_delete', methods=['POST'])
+@jwt_required
+def comment_delete():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	comment_id = request.form['comment_id']
+
+	access = access_check_comment(g.db, comment_id, user['user_id'])
+	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
+	if access is not 1: abort(400)
+
+	result = delete_comment(g.db, comment_id)
+
+	return jsonify(
+		result = result)
 
 #함수 #########################################################
 '''
@@ -265,7 +366,7 @@ def to_hash(pw):
 	return sha.hexdigest()
 '''
 
-#파일 이름 변
+#파일 이름 변환
 def file_name_encode(file_name):
 	#허용 확장자 / 길이인지 확인.
 	if secure_filename(file_name).split('.')[-1] in ALLOWED_EXTENSIONS and len(file_name) < 240:

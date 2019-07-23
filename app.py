@@ -25,7 +25,7 @@ def main_app(test_config = None):
 	#DB초기화
 	init_db()
 	#백그라운드 작업
-	#schedule_init()
+	schedule_init()
 	#페이지들
 	application.register_blueprint(main.BP)
 	application.register_blueprint(auth.BP)
@@ -39,12 +39,6 @@ def main_app(test_config = None):
 @application.before_request
 def before_request():
 	get_db()
-
-'''
-@application.after_request
-def after_request():
-	close_db()
-'''
 
 @application.teardown_request
 def teardown_request(exception):
