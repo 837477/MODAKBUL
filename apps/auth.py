@@ -53,14 +53,16 @@ def get_userinfo():
 
 	tags = select_user_tag(g.db, user['user_id'])
 	user_post_like = select_user_post_like(g.db, user['user_id'])
-
+	user_comments = select_user_comments(g.db, user['user_id'])
+	
 	return jsonify(
 		result = "success",
 		user_id = user['user_id'],
 		user_name = user['user_name'],
 		user_color = user['user_color'],
 		user_tags = tags,
-		user_like_posts = user_post_like)
+		user_like_posts = user_post_like,
+		user_comments = user_comments)
 
 #회원 컬러 변경 (OK)
 @BP.route('/user-color', methods=['POST'])

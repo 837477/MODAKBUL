@@ -172,10 +172,22 @@ def get_post(post_id):
 
 #해당 게시글 불러오길(단일, 비밀글 체크용)
 @BP.route('/post_private/<int:post_id>')
-@jwt_required
+@jwt_optional
 def get_post_private(post_id):
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(403)
+	'''
+	try:
+		if get_jwt_identity():
+        	user = select_user(g.db, get_jwt_identity())
+			if user is None: abort(400)
+      	else:
+         	current_user = {"user_id":None}
+      	
+      	return jsonify(timeline_list = generate_timeline_test(g.db),
+                     result = "success")
+	'''
+	
+    user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
 
 	post = select_post(g.db, post_id)
 
@@ -384,10 +396,9 @@ def comment_upload():
 	anony = request.form['anony']
 	comment_id = request.form['comment_id']
 
-	if comment_id is 0:
-		comment_id = "NULL"
+	if comment_id == "0":
+		comment_id = None
 	
-
 	result = insert_comment(g.db, post_id, user['user_id'], comment, anony, comment_id)
 
 	return jsonify(
@@ -416,16 +427,15 @@ def comment_update():
 	return jsonify(
 		result = result)
 
-#댓글 삭제
-@BP.route('/comment_delete', methods=['POST'])
+#댓글 삭제 (OK)
+@BP.route('/comment_delete/<int:comment_id>')
 @jwt_required
-def comment_delete():
+def comment_delete(comment_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
-	comment_id = request.form['comment_id']
-
 	access = access_check_comment(g.db, comment_id, user['user_id'])
+
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
 	if access is not 1: abort(400)
 

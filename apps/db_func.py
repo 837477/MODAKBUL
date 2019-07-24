@@ -48,6 +48,20 @@ def select_user_post_like(db, user_id):
 
 	return like_posts
 
+#사용자가 작성한 댓글들 반환
+def select_user_comments(db, user_id):
+	with db.cursor() as cursor:
+		sql = "SELECT comment_id FROM post_comment WHERE user_id = %s;"
+		cursor.execute(sql, (user_id,))
+
+		result = cursor.fetchall()
+
+		comments = []
+		for comment in result:
+			comments.append(comment['comment_id'])
+
+	return comments
+
 #사용자 컬러 변경
 def change_user_color(db, user_id, color):
 	with db.cursor() as cursor:
@@ -107,14 +121,14 @@ def select_tag_in_posts(tag_list):
 #태그가 속해있는 글들(ALL) 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, if(post_anony=0, user_id, "익명") AS post_author, if(post_anony=0, user_name, "익명") AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 	return result
 #태그가 속해있는 글들(ALL) 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
+		sql = 'SELECT R.post_id AS post_id, if(post_anony=0, user_id, "익명") AS post_author, if(post_anony=0, user_name, "익명") AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -122,7 +136,7 @@ def select_posts_list(db, tag_in_post_id):
 #해당 포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT * FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, if(post_anony=0, user_id, "익명") AS user_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, if(post_anony=0, author_name, "익명") AS author_name, author_color FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
@@ -243,7 +257,7 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name AS author_name, B.user_color AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
+		sql = "SELECT A.comment_id, IF(A.comment_anony=0, A.user_id, '익명') AS user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, B.user_color AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
 
@@ -252,7 +266,7 @@ def select_comment(db, post_id):
 #포스트 댓글 쓰기 (대댓글도 동일)
 def insert_comment(db, post_id, user_id, comment, anony, comment_id):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO post_comment (post_id, user_id, comment, comment_anony, comment_parent) VALUES (%s, %s, %s, %s, %s);"
+		sql = 'INSERT INTO post_comment (post_id, user_id, comment, comment_anony, comment_parent) VALUES (%s, %s, %s, %s, %s);'
 		cursor.execute(sql, (post_id, user_id, comment, anony, comment_id,))
 	db.commit()
 	return "success"
@@ -293,8 +307,8 @@ def access_check_comment(db, comment_id, user_id):
 		return 1
 
 	with db.cursor() as cursor:
-		sql = 'SELECT IF(user_id = "%s", 1, 0) AS access from post_comment where comment_id = %s;'
-		cursor.execute(sql, (post_id,))
+		sql = 'SELECT IF(user_id = %s, 1, 0) AS access from post_comment where comment_id = %s;'
+		cursor.execute(sql, (user_id, comment_id, ))
 		result = cursor.fetchone()
 	return result['access']
 
