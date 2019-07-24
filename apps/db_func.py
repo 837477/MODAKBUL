@@ -60,7 +60,7 @@ def change_user_color(db, user_id, color):
 #보드 테이블 반환
 def select_board(db):
 	with db.cursor() as cursor:
-		sql = "SELECT board_name, board_url AS board_tag FROM board;"
+		sql = "SELECT board_name, board_url FROM board;"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result 
@@ -127,7 +127,7 @@ def select_post(db, post_id):
 		result = cursor.fetchone()
 
 		#프론트의 요구로 날짜 형식 변형
-		result['post_date'] = result['post_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+		result['post_date'] = result['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
 	return result
 
@@ -220,6 +220,13 @@ def update_view(db, post_id):
 #포스트 좋아요 등록
 def insert_post_like(db, post_id, user_id):
 	with db.cursor() as cursor:
+		sql = "SELECT * FROM post_like WHERE post_id=%s AND user_id=%s;"
+		cursor.execute(sql, (post_id, user_id,))
+		result = cursor.fetchone()
+
+		if result is not None:
+			return "bad request"
+
 		sql = "INSERT INTO post_like (post_id, user_id) VALUES (%s, %s);"
 		cursor.execute(sql, (post_id, user_id,))
 	db.commit()
@@ -236,21 +243,19 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name, B.user_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s;"
+		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name AS author_name, B.user_color AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
 
 	return result
 
-#포스트 댓글 쓰기
+#포스트 댓글 쓰기 (대댓글도 동일)
 def insert_comment(db, post_id, user_id, comment, anony, comment_id):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO post_comment (post_id, user_id, comment, anony, comment_id) VALUES (%s, %s, %s, %s, %s);"
-		cursor.execute(sql, (post_id, user_id, comment, anony,))
+		sql = "INSERT INTO post_comment (post_id, user_id, comment, comment_anony, comment_parent) VALUES (%s, %s, %s, %s, %s);"
+		cursor.execute(sql, (post_id, user_id, comment, anony, comment_id,))
 	db.commit()
 	return "success"
-
-#포스트 대댓글 쓰기
 
 #포스트 댓글 수정
 def update_comment(db, comment_id, comment, anony, user_id):

@@ -24,7 +24,7 @@ def image2():
 ###################################################
 #포스트 반환
 
-#게시판 반환(ex 공지사항, 학생회비 사용내역 등)
+#게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/board')
 def get_board():
 	result = {}
@@ -142,7 +142,7 @@ def get_post(post_id):
 		double_comment = []
 
 		#댓글 날짜 형식 변경
-		comment['comment_date'] = comment['comment_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+		comment['comment_date'] = comment['comment_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
 		#일반 댓글 / 대댓글 판별!
 		if comment['comment_parent'] is None:
@@ -227,7 +227,7 @@ def image(page):
 @jwt_required
 def post_upload():
 	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(403)
+	if user is None: abort(400)
 
 	title = request.form['title']
 	content = request.form['content']
@@ -239,9 +239,9 @@ def post_upload():
 
 	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
 	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
-	print("3")
-	if post_id is None:
-		return jsonify(result = "Fail")
+
+	if post_id is None: abort(400)
+
 	else:
 		#첨부할 파일이 있는지 확인
 		if files is not None:
@@ -279,9 +279,11 @@ def post_update():
 
 	post_id = request.form['post_id']
 
+	'''
 	access = access_check_post(g.db, post_id, user['user_id'])
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
 	if access is not 1: abort(400)
+	'''
 
 	title = request.form['title']
 	content = request.form['content']
@@ -338,7 +340,7 @@ def post_delete():
 #######################################################
 #조회수 / 댓글 / 좋아요 처리
 
-#조회수 증가
+#조회수 증가 (OK)
 @BP.route('/view_up/<int:post_id>')
 def view_up(post_id):
 	result = update_view(g.db, post_id)
@@ -346,7 +348,7 @@ def view_up(post_id):
 	return jsonify(
 		result = result)
 
-#좋아요 등록
+#좋아요 등록 (OK)
 @BP.route('/post_like_up/<int:post_id>')
 @jwt_required
 def post_like_up(post_id):
@@ -358,7 +360,7 @@ def post_like_up(post_id):
 	return jsonify(
 		result = result)
 
-#좋아요 취소
+#좋아요 취소 (OK)
 @BP.route('/post_like_down/<int:post_id>')
 @jwt_required
 def post_like_down(post_id):
@@ -370,7 +372,7 @@ def post_like_down(post_id):
 	return jsonify(
 		result = result)
 
-#댓글 쓰기
+#댓글 쓰기 (OK)
 @BP.route('/comment_upload', methods=['POST'])
 @jwt_required
 def comment_upload():
@@ -382,15 +384,16 @@ def comment_upload():
 	anony = request.form['anony']
 	comment_id = request.form['comment_id']
 
-	if comment_id is None:
+	if comment_id is 0:
 		comment_id = "NULL"
+	
 
 	result = insert_comment(g.db, post_id, user['user_id'], comment, anony, comment_id)
 
 	return jsonify(
 		result = result)
 
-#댓글 수정
+#댓글 수정 (보류)
 @BP.route('/comment_update', methods=['POST'])
 @jwt_required
 def comment_update():
@@ -399,9 +402,11 @@ def comment_update():
 
 	comment_id = request.form['comment_id']
 
+	'''
 	access = access_check_comment(g.db, comment_id, user['user_id'])
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
 	if access is not 1: abort(400)
+	'''
 
 	comment = request.form['comment']
 	anony = request.form['anony']

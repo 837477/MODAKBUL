@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW v_post AS (SELECT E.*, F.user_name, F.user_color FROM (SELECT D.*, ifnull(C.like_cnt, 0) AS like_cnt, ifnull(C.comment_cnt, 0) AS comment_cnt FROM (SELECT A.post_id, A.like_cnt, B.comment_cnt FROM (SELECT post_id, COUNT(*) AS like_cnt FROM post_like GROUP BY post_id) A LEFT JOIN (SELECT post_id, COUNT(*) AS comment_cnt FROM post_comment GROUP BY post_id) B ON A.post_id = B.post_id) C RIGHT JOIN (SELECT * FROM post) D ON C.post_id = D.post_id) E LEFT JOIN (SELECT user_id, user_name, user_color FROM user) F ON E.user_id = F.user_id);
+CREATE OR REPLACE VIEW v_post AS (SELECT E.*, F.user_name AS author_name, F.user_color AS author_color FROM (SELECT D.*, ifnull(C.like_cnt, 0) AS like_cnt, ifnull(C.comment_cnt, 0) AS comment_cnt FROM (SELECT A.post_id, A.like_cnt, B.comment_cnt FROM (SELECT post_id, COUNT(*) AS like_cnt FROM post_like GROUP BY post_id) A LEFT JOIN (SELECT post_id, COUNT(*) AS comment_cnt FROM post_comment GROUP BY post_id) B ON A.post_id = B.post_id) C RIGHT JOIN (SELECT * FROM post) D ON C.post_id = D.post_id) E LEFT JOIN (SELECT user_id, user_name, user_color FROM user) F ON E.user_id = F.user_id);
 
 
 /*
