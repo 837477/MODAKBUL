@@ -1,4 +1,5 @@
 from global_func import *
+from datetime import datetime
 #사용자 관련############################################
 
 #사용자 찾기
@@ -64,7 +65,20 @@ def select_board(db):
 		result = cursor.fetchall()
 	return result 
 
-#태그가 속해있는 글의 아이디(post_id)들을 반환 (쿼리문형식, 중복가능)
+#비밀글 확인 (0, 1 반환)
+def select_private_check(db, post_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT tag_id from post_tag WHERE post_id = %s AND tag_id="비밀글";'
+		cursor.execute(sql, (post_id, ))
+		result = cursor.fetchone()
+
+		#꼼수이용! 비밀글 태그가 없으면 None을 반환하니 이것으로 판단.
+		if result is None:
+			return 0
+		else:
+			return 1
+
+#해당 태그리스트들이 속해있는 글 목록 반환(post_id만 반환) 쿼리문으로 스트링반환임
 def select_tag_in_posts(tag_list):	
 	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
 	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
@@ -93,14 +107,14 @@ def select_tag_in_posts(tag_list):
 #태그가 속해있는 글들(ALL) 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 	return result
 #태그가 속해있는 글들(ALL) 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS post_author, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -111,6 +125,10 @@ def select_post(db, post_id):
 		sql = 'SELECT * FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
+
+		#프론트의 요구로 날짜 형식 변형
+		result['post_date'] = result['post_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+
 	return result
 
 #포스트 미리보기 글들 반환 (갤러리 전용, 페이지네이션)
@@ -218,18 +236,21 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name  FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s;"
+		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name, B.user_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
+
 	return result
 
 #포스트 댓글 쓰기
-def insert_comment(db, post_id, user_id, comment, anony):
+def insert_comment(db, post_id, user_id, comment, anony, comment_id):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO post_comment (post_id, user_id, comment, anony) VALUES (%s, %s, %s, %s);"
+		sql = "INSERT INTO post_comment (post_id, user_id, comment, anony, comment_id) VALUES (%s, %s, %s, %s, %s);"
 		cursor.execute(sql, (post_id, user_id, comment, anony,))
 	db.commit()
 	return "success"
+
+#포스트 대댓글 쓰기
 
 #포스트 댓글 수정
 def update_comment(db, comment_id, comment, anony, user_id):
@@ -272,4 +293,3 @@ def access_check_comment(db, comment_id, user_id):
 		result = cursor.fetchone()
 	return result['access']
 
-#

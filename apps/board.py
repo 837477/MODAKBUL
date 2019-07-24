@@ -2,7 +2,6 @@ from flask import *
 from werkzeug import *
 from flask_jwt_extended import *
 from PIL import Image
-from datetime import datetime
 from db_func import *
 
 #import hashlib
@@ -64,10 +63,12 @@ def get_posts_page(tag_string, page):
 				else:
 					file_cnt += 1
 		
+		private = select_private_check(g.db, post['post_id'])
+
 		post.update(
 			img_cnt = img_cnt,
-			file_cnt = file_cnt
-			)
+			file_cnt = file_cnt,
+			private = private)
 
 	result.update(
 		posts = posts,
@@ -78,7 +79,7 @@ def get_posts_page(tag_string, page):
 @BP.route('/posts/<string:tag_string>')
 def get_posts_list(tag_string):
 	result = {}
-	
+
 	tag_list = tag_string.split('_')
 	tag_in_post_id = select_tag_in_posts(tag_list)
 	
@@ -89,6 +90,9 @@ def get_posts_list(tag_string):
 		img_cnt = 0
 		file_cnt = 0
 		
+		#날짜 형식 변경
+		post['post_date'] = post['post_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+
 		#해당 포스트 아이디의 파일들을 불러온다.
 		db_files = select_attach(g.db, post['post_id'])
 
@@ -102,10 +106,12 @@ def get_posts_list(tag_string):
 				else:
 					file_cnt += 1
 		
+		private = select_private_check(g.db, post['post_id'])
+
 		post.update(
 			img_cnt = img_cnt,
-			file_cnt = file_cnt
-			)
+			file_cnt = file_cnt,
+			private = private)
 
 	result.update(
 		posts = posts,
@@ -115,16 +121,78 @@ def get_posts_list(tag_string):
 #해당 게시글 불러오기(단일) (OK)
 @BP.route('/post/<int:post_id>')
 def get_post(post_id):
+	if select_private_check(g.db, post_id) is 1: 
+		abort(400)
+
 	result = {}
 	post = select_post(g.db, post_id)
 	attach = select_attach(g.db, post_id)
-	comment = select_comment(g.db, post_id)
+	comments = select_comment(g.db, post_id)
+
+	files = []
+	#리사이즈 된 파일은 보내줄 필요가 없기 때문에 걸러줌.
+	for file in attach:
+		if file['file_path'][0:2] != "S#":
+			files.append(file['file_path'])
+
+	result_comments = []
+
+	#코맨츠 전체 탐색
+	for comment in comments:
+		double_comment = []
+
+		#댓글 날짜 형식 변경
+		comment['comment_date'] = comment['comment_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+
+		#일반 댓글 / 대댓글 판별!
+		if comment['comment_parent'] is None:
+
+			#만약 일반이면? 이 일반 댓글의 대댓글의 유/무 탐색
+			for d_comment in comments:
+				#해당 대댓글이 있으면 대댓글 리스트에 추가!!
+				if comment['comment_id'] is d_comment['comment_parent']:
+					double_comment.append(d_comment)
+
+			#그리고 해당 댓글 딕셔너리에 대댓글 추가
+			comment.update(double_comment = double_comment)
+			
+			#마지막으로 최정 댓글 리스트에 작업한 댓글 추가
+			result_comments.append(comment)
+
+		double_comment = []
+
+
 	result.update(
 		post = post,
-		files = attach,
-		comment = comment,
+		files = files,
+		comment = result_comments,
 		result = "success")
+
 	return result
+
+#해당 게시글 불러오길(단일, 비밀글 체크용)
+@BP.route('/post_private/<int:post_id>')
+@jwt_required
+def get_post_private(post_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(403)
+
+	post = select_post(g.db, post_id)
+
+	if post['user_id'] is user['user_id'] or user['user_id'] is "ADMIN":
+		result = {}
+
+		attach = select_attach(g.db, post_id)
+		comment = select_comment(g.db, post_id)
+		result.update(
+			post = post,
+			files = attach,
+			comment = comment,
+			result = "success")
+		return result
+	else:
+		return jsonify(
+			result = "no access")
 
 #갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
 @BP.route('/image/<int:page>')
@@ -160,7 +228,7 @@ def image(page):
 def post_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(403)
-	
+
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
@@ -171,7 +239,7 @@ def post_upload():
 
 	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
 	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
-
+	print("3")
 	if post_id is None:
 		return jsonify(result = "Fail")
 	else:
@@ -312,8 +380,12 @@ def comment_upload():
 	post_id = request.form['post_id']
 	comment = request.form['comment']
 	anony = request.form['anony']
+	comment_id = request.form['comment_id']
 
-	result = insert_comment(g.db, post_id, user['user_id'], comment, anony)
+	if comment_id is None:
+		comment_id = "NULL"
+
+	result = insert_comment(g.db, post_id, user['user_id'], comment, anony, comment_id)
 
 	return jsonify(
 		result = result)

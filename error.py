@@ -5,6 +5,10 @@ BP = Blueprint('error', __name__)
 def bad_requests(error):
 		return jsonify(result = "bad request"), 400
 
+@BP.app_errorhandler(401)
+def sibal(error):
+		return jsonify(result = "fuckyou"), 401
+
 @BP.app_errorhandler(403)
 def admin_only(error):
 		return jsonify(result = "admin only"), 403
@@ -12,6 +16,7 @@ def admin_only(error):
 @BP.app_errorhandler(404)
 def page_not_found(error):
 		return jsonify(result = "404 page"), 404
+
 # 맞지 않는 메소드
 @BP.app_errorhandler(405)
 def bad_requests(error):
