@@ -58,8 +58,6 @@ def init_db():
         cursor.execute(sql)
         sql = open("database/table/table_vote_tag.sql").read()
         cursor.execute(sql)
-        sql = open("database/table/table_vote_content_type.sql").read()
-        cursor.execute(sql)
         sql = open("database/table/table_vote_que.sql").read()
         cursor.execute(sql)
         sql = open("database/table/table_vote_select.sql").read()

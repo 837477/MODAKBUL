@@ -404,7 +404,7 @@ def comment_upload():
 	return jsonify(
 		result = result)
 
-#댓글 수정 (보류)
+#댓글 수정 (보류) - 현재 사용 안함.
 @BP.route('/comment_update', methods=['POST'])
 @jwt_required
 def comment_update():
