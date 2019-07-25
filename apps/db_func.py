@@ -79,7 +79,7 @@ def select_board(db):
 		result = cursor.fetchall()
 	return result 
 
-#비밀글 확인 (0, 1 반환)
+#비밀글 확인 (0: 공개, 1:비밀 반환)
 def select_private_check(db, post_id):
 	with db.cursor() as cursor:
 		sql = 'SELECT tag_id from post_tag WHERE post_id = %s AND tag_id="비밀글";'
@@ -92,7 +92,16 @@ def select_private_check(db, post_id):
 		else:
 			return 1
 
-#해당 태그리스트들이 속해있는 글 목록 반환(post_id만 반환) 쿼리문으로 스트링반환임
+#비밀글 주인 확인 (0: 아님, 1: 맞음 반환)
+def private_user_check(db, post_id, user_id):
+	with db.cursor() as cursor:
+		sql = "SELECT IF(user_id=%s, 1, 0) AS result FROM post WHERE post_id = %s;"
+		cursor.execute(sql, (user_id, post_id,))
+		result = cursor.fetchone()
+
+	return result['result']
+
+#해당 태그리스트들이 속해있는 글 목록 반환(post_id만 반환) 쿼리문 스트링 반환
 def select_tag_in_posts(tag_list):	
 	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
 	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
@@ -121,14 +130,14 @@ def select_tag_in_posts(tag_list):
 #태그가 속해있는 글들(ALL) 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, if(post_anony=0, user_id, "익명") AS post_author, if(post_anony=0, user_name, "익명") AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 	return result
 #태그가 속해있는 글들(ALL) 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, if(post_anony=0, user_id, "익명") AS post_author, if(post_anony=0, user_name, "익명") AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -136,7 +145,7 @@ def select_posts_list(db, tag_in_post_id):
 #해당 포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT post_id, if(post_anony=0, user_id, "익명") AS user_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, if(post_anony=0, author_name, "익명") AS author_name, author_color FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, user_id AS author_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_name AS author_name, user_color AS author_color FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 

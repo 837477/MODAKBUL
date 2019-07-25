@@ -53,6 +53,9 @@ def get_posts_page(tag_string, page):
 		#해당 포스트 아이디의 파일들을 불러온다.
 		db_files = select_attach(g.db, post['post_id'])
 
+		#날짜 형식 변경
+		post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+
 		#파일 개수 파악 시작!!
 		for file in db_files:
 			#이건 미리보기 파일이라 갯수에 포함X
@@ -91,7 +94,7 @@ def get_posts_list(tag_string):
 		file_cnt = 0
 		
 		#날짜 형식 변경
-		post['post_date'] = post['post_date'].strftime("%Y년%m월%d일 %H:%M:%S")
+		post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
 		#해당 포스트 아이디의 파일들을 불러온다.
 		db_files = select_attach(g.db, post['post_id'])
@@ -118,12 +121,45 @@ def get_posts_list(tag_string):
 		result = "success")
 	return jsonify(result)
 
-#해당 게시글 불러오기(단일) (OK)
+#게시물 단일 불러오기 공통 URL (공개글 / 비공개글) (OK)
 @BP.route('/post/<int:post_id>')
+@jwt_optional #우선 토큰이 유효하든 안하든 받고 본다.
 def get_post(post_id):
-	if select_private_check(g.db, post_id) is 1: 
-		abort(400)
+	private = select_private_check(g.db, post_id)
 
+	#비밀글이면?
+	if private == 1:
+
+		#토큰이 유효하면?
+		if get_jwt_identity():
+			#해당 토큰으로 유저 정보를 불러오고
+			user = select_user(g.db, get_jwt_identity())
+
+			#유저 정보가 아예 없으면 잘못된 접근!
+			if user is None: abort(400)
+
+			#비밀글 작성자 인지 / 관리자인지 확인!
+			user_check = private_user_check(g.db, post_id, user['user_id'])
+
+			if user_check == 1:
+				result = get_post_func(post_id)
+
+			else:
+				result = "do not access"
+
+		#토큰이 유효하지 않으면?
+		else:
+			abort(400)
+			
+
+	#비밀글이 아니면?
+	else:
+		result = get_post_func(post_id)
+
+	return jsonify(result)
+	
+#해당 게시글 불러오기(단일) (OK)
+def get_post_func(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
 	attach = select_attach(g.db, post_id)
@@ -169,42 +205,6 @@ def get_post(post_id):
 		result = "success")
 
 	return result
-
-#해당 게시글 불러오길(단일, 비밀글 체크용)
-@BP.route('/post_private/<int:post_id>')
-@jwt_optional
-def get_post_private(post_id):
-	'''
-	try:
-		if get_jwt_identity():
-        	user = select_user(g.db, get_jwt_identity())
-			if user is None: abort(400)
-      	else:
-         	current_user = {"user_id":None}
-      	
-      	return jsonify(timeline_list = generate_timeline_test(g.db),
-                     result = "success")
-	'''
-	
-    user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	post = select_post(g.db, post_id)
-
-	if post['user_id'] is user['user_id'] or user['user_id'] is "ADMIN":
-		result = {}
-
-		attach = select_attach(g.db, post_id)
-		comment = select_comment(g.db, post_id)
-		result.update(
-			post = post,
-			files = attach,
-			comment = comment,
-			result = "success")
-		return result
-	else:
-		return jsonify(
-			result = "no access")
 
 #갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
 @BP.route('/image/<int:page>')
