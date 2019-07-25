@@ -1,6 +1,6 @@
 from global_func import *
 from datetime import datetime
-#사용자 관련############################################
+#사용자 관련##################################
 
 #사용자 찾기
 def select_user(db, user_id):
@@ -69,7 +69,7 @@ def change_user_color(db, user_id, color):
 		cursor.execute(sql, (color, user_id,))
 	db.commit()
 
-#보드 관련#############################################
+#보드 / 포스트 관련#############################
 
 #보드 테이블 반환
 def select_board(db):
@@ -103,8 +103,8 @@ def private_user_check(db, post_id, user_id):
 
 #해당 태그리스트들이 속해있는 글 목록 반환(post_id만 반환) 쿼리문 스트링 반환
 def select_tag_in_posts(tag_list):	
-	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
-	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
+	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id = "%s") P1 '
+	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id = "%s") P%s '
 	i = 2
 	result_sql = ""
 
@@ -170,7 +170,7 @@ def select_attach(db, post_id):
 		result = cursor.fetchall()
 	return result
 
-#업로드 / 수정 / 권한체크 #################################
+#업로드 / 수정 / 권한체크 #########################
 
 #포스트 업로드
 def insert_post(db, user_id, title, content, anony, tags):
@@ -178,8 +178,8 @@ def insert_post(db, user_id, title, content, anony, tags):
 		sql = "INSERT INTO post (user_id, post_title, post_content, post_anony) VALUES (%s, %s, %s, %s);"
 		cursor.execute(sql, (user_id, title, content, anony,))
 		
-		sql = "SELECT MAX(post_id) AS post_id FROM post"
-		cursor.execute(sql)
+		sql = "SELECT MAX(post_id) AS post_id FROM post WHERE user_id = %s;"
+		cursor.execute(sql, (user_id,))
 
 		post_id = cursor.fetchone()
 
@@ -230,7 +230,7 @@ def delete_attach(db, post_id):
 	db.commit()
 	return "success"
 
-#조회수 / 댓글 / 좋아요 ##################################
+#조회수 / 댓글 / 좋아요 ###########################
 
 #포스트 조회수 증가
 def update_view(db, post_id):
@@ -297,11 +297,30 @@ def delete_comment(db, comment_id):
 	db.commit()
 	return "success"
 
-#접근 권환 확인 ####################################
+#투표 관련#####################################
+#투표 추가
+def insert_vote(db, user_id, title, content, end_date):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO vote(user_id, vote_title, vote_content, end_date) VALUES(%s, %s, %s, %s);'
+
+		cursor.execute(sql, (user_id, title, content, end_date,))
+
+		sql = 'SELECT MAX(vote_id) AS vote_id FROM vote WHERE user_id = %s;'
+
+		cursor.execute(sql, (user_id,))
+
+		vote_id = cursor.fetchone()
+
+		db.commit()
+
+	return vote_id['vote_id']
+
+
+#접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다.
 #포스트 삭제 권한 확인
 def access_check_post(db, post_id, user_id):
-	if user_id is "ADMIN":
+	if check_admin(db, user_id):
 		return 1
 
 	with db.cursor() as cursor:
@@ -312,7 +331,7 @@ def access_check_post(db, post_id, user_id):
 
 #댓글 삭제 권환 확인
 def access_check_comment(db, comment_id, user_id):
-	if user_id is "ADMIN":
+	if check_admin(db, user_id):
 		return 1
 
 	with db.cursor() as cursor:
@@ -321,3 +340,9 @@ def access_check_comment(db, comment_id, user_id):
 		result = cursor.fetchone()
 	return result['access']
 
+#관리자 확인
+def check_admin(db, user_id):
+	if "ADMIN" in select_user_tag(db, user_id):
+		return True
+	else:
+		return False

@@ -25,7 +25,7 @@ def image2():
 #포스트 반환
 
 #게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
-@BP.route('/board')
+@BP.route('/get_board')
 def get_board():
 	result = {}
 	board = select_board(g.db)
@@ -36,7 +36,7 @@ def get_board():
 	return jsonify(result)
 
 #해당 게시판의 글들 불러오기(페이지네이션) (OK)
-@BP.route('/posts/<string:tag_string>/<int:page>')
+@BP.route('/get_posts/<string:tag_string>/<int:page>')
 def get_posts_page(tag_string, page):
 	result = {}
 
@@ -79,7 +79,7 @@ def get_posts_page(tag_string, page):
 	return jsonify(result)
 
 #해당 게시판의 글들 불러오기(전체) (OK)
-@BP.route('/posts/<string:tag_string>')
+@BP.route('/get_posts/<string:tag_string>')
 def get_posts_list(tag_string):
 	result = {}
 
@@ -122,7 +122,7 @@ def get_posts_list(tag_string):
 	return jsonify(result)
 
 #게시물 단일 불러오기 공통 URL (공개글 / 비공개글) (OK)
-@BP.route('/post/<int:post_id>')
+@BP.route('/get_post/<int:post_id>')
 @jwt_optional #우선 토큰이 유효하든 안하든 받고 본다.
 def get_post(post_id):
 	private = select_private_check(g.db, post_id)
@@ -149,9 +149,9 @@ def get_post(post_id):
 
 		#토큰이 유효하지 않으면?
 		else:
-			abort(400)
+			return jsonify(
+				result = "do not access")
 			
-
 	#비밀글이 아니면?
 	else:
 		result = get_post_func(post_id)
@@ -207,8 +207,8 @@ def get_post_func(post_id):
 	return result
 
 #갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
-@BP.route('/image/<int:page>')
-def image(page):
+@BP.route('/get_image/<int:page>')
+def get_image(page):
 	result = {}
 
 	tag_in_post_id = select_tag_in_posts(['갤러리'])
