@@ -266,7 +266,7 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, IF(A.comment_anony=0, A.user_id, '익명') AS user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, B.user_color AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
+		sql = "SELECT A.comment_id, IF(A.comment_anony=0, A.user_id, '익명') AS user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, IF(A.comment_anony=0, B.user_color, '#D8D8D8') AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
 
@@ -316,8 +316,9 @@ def insert_vote(db, user_id, title, content, end_date):
 	return vote_id['vote_id']
 
 
+
 #접근 권환 확인 ################################
-#수정권한은 쿼리문에서 AND로 비교한다.
+#수정권한은 쿼리문에서 AND로 비교한다. 
 #포스트 삭제 권한 확인
 def access_check_post(db, post_id, user_id):
 	if check_admin(db, user_id):

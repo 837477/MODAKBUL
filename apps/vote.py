@@ -15,9 +15,13 @@ def vote_upload():
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
+	#Vote 메인 입력
 	title = request.form['title']
 	content = request.form['content']
 	end_date = request.form['end_date']
 	files = request.files.getlist('files')
 
-	
+	#질문들 입력 (ex [{que: "", que_type: 0}, ...] )
+	que = request.form['que']
+
+	select = request.form['select']

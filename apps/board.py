@@ -21,6 +21,10 @@ def imag2222e():
 @BP.route('/posts')
 def image2():
 	return render_template('board/index2.html')	
+
+@BP.route('/v/<int:post_id>')
+def view_page(post_id):
+	return render_template('board/index.html')
 ###################################################
 #포스트 반환
 
@@ -59,7 +63,7 @@ def get_posts_page(tag_string, page):
 		#파일 개수 파악 시작!!
 		for file in db_files:
 			#이건 미리보기 파일이라 갯수에 포함X
-			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] != "S#":
+			if file['file_path'][0:2] != "S#":
 				#이미지냐? 아니면 일반파일이냐?
 				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
 					img_cnt += 1
@@ -67,6 +71,7 @@ def get_posts_page(tag_string, page):
 					file_cnt += 1
 		
 		private = select_private_check(g.db, post['post_id'])
+		
 
 		post.update(
 			img_cnt = img_cnt,
@@ -145,7 +150,8 @@ def get_post(post_id):
 				result = get_post_func(post_id)
 
 			else:
-				result = "do not access"
+				return jsonify(
+					result = "do not access") 
 
 		#토큰이 유효하지 않으면?
 		else:
