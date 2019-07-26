@@ -22,7 +22,10 @@ def login_modakbul():
 	user = select_user(g.db, USER_ID)
 	
 	if user is None:
-		sejong_api_result = sejong_api(USER_ID, USER_PW)
+		sejong_api_result = dosejong_api(USER_ID, USER_PW)
+		if sejong_api_result is None:
+			sejong_api_result = sejong_api(USER_ID, USER_PW)
+			
 		if not sejong_api_result['result']:
 			return jsonify(result = "You are not sejong")
 		else:

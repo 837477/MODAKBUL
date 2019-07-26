@@ -207,7 +207,7 @@ def delete_post(db, post_id):
 	#삭제는 ADMIN도 가능해야 하므로 AND 연산으로 해당 토큰으로 받은 user까지 비교해버리면 ADMIN 토큰으로는 삭제가 불가능 따라서 별도의 ACCESS체크 함수를 이용
 	with db.cursor() as cursor:
 		sql = "DELETE FROM post WHERE post_id=%s;"
-		cursor.execute(sql, (post_id, user_id))
+		cursor.execute(sql, (post_id,))
 	db.commit()
 	return "success"
 
@@ -299,6 +299,7 @@ def delete_comment(db, comment_id):
 	return "success"
 
 #투표 관련#####################################
+
 #투표 추가
 def insert_vote(db, vote):
 	with db.cursor() as cursor:
@@ -313,13 +314,13 @@ def insert_vote(db, vote):
 		vote_id = cursor.fetchone()
 		vote_id = vote_id['vote_id']
 
-		for question in vote['que']:
+		for que in vote['que_list']:
 			#질문 등록 쿼리문
 			sql = 'INSERT INTO vote_que(vote_id, que, que_type) VALUES(%s, %s, %s);'
-			cursor.execute(sql, (vote_id, question['question'], question['que_type'],))
+			cursor.execute(sql, (vote_id, que['que'], que['que_type'],))
 			
 			#만약에 선택형 질문이면?
-			if 'select' in question:
+			if 'select' in que:
 				#등록된 질문 아이디 가져오기.
 				sql = 'SELECT MAX(que_id) AS que_id FROM vote_que;'
 				cursor.execute(sql);
@@ -327,7 +328,7 @@ def insert_vote(db, vote):
 				que_id = cursor.fetchone()
 				que_id = que_id['que_id']
 				
-				for select in question['select']:
+				for select in que['select']:
 					sql = 'INSERT INTO vote_select(que_id, select_content) VALUES(%s, %s);'
 					cursor.execute(sql, (que_id, select,))
 
@@ -335,7 +336,23 @@ def insert_vote(db, vote):
 
 	return "success"
 
+#투표 수정 (마감 기한만 가능)
+def update_vote(db, user_id, end_date):
+	#수정은 본인만 가능해야 하므로 AND 연산으로 해당 토큰으로 받은 user와 맞는지도 확인한다
+	with db.cursor() as cursor:
+		sql = 'UPDATE vote SET end_date=%s WHERE vote_id=%s; AND user_id=%s;'
+		cursor.execute(sql, (end_date, user_id,))
+	db.commit()
+	return "success"
 
+#투표 삭제
+def delete_vote(db, vote_id, user_id):
+	#투표 삭제는 어드민만 가능! (어차피 작성자 또한 어드민)
+	with db.cursor() as cursor:
+		sql = "DELETE FROM vote WHERE vote_id=%s AND user_id=%s;"
+		cursor.execute(sql, (post_id, user_id))
+	db.commit()
+	return "success"
 
 #접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다. 
