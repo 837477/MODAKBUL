@@ -182,15 +182,16 @@ def insert_post(db, user_id, title, content, anony, tags):
 		cursor.execute(sql, (user_id,))
 
 		post_id = cursor.fetchone()
+		post_id = post_id['post_id']
 
 		db.commit()
 
 		for tag in tags:
 			sql = 'INSERT INTO post_tag (post_id, tag_id) VALUES (%s, %s);'
-			cursor.execute(sql, (post_id['post_id'], tag,))
+			cursor.execute(sql, (post_id, tag,))
 			db.commit()
 
-	return post_id['post_id']
+	return post_id
 
 #포스트 수정
 def update_post(db, post_id, title, content, anony, user_id):
@@ -299,21 +300,40 @@ def delete_comment(db, comment_id):
 
 #투표 관련#####################################
 #투표 추가
-def insert_vote(db, user_id, title, content, end_date):
+def insert_vote(db, vote):
 	with db.cursor() as cursor:
+		#투표 등록 쿼리문
 		sql = 'INSERT INTO vote(user_id, vote_title, vote_content, end_date) VALUES(%s, %s, %s, %s);'
+		cursor.execute(sql, (vote['user_id'], vote['title'], vote['content'], vote['end_date'],))
 
-		cursor.execute(sql, (user_id, title, content, end_date,))
-
+		#등록된 투표 아이디 가져오기.
 		sql = 'SELECT MAX(vote_id) AS vote_id FROM vote WHERE user_id = %s;'
-
-		cursor.execute(sql, (user_id,))
+		cursor.execute(sql, (vote['user_id'],))
 
 		vote_id = cursor.fetchone()
+		vote_id = vote_id['vote_id']
 
-		db.commit()
+		for question in vote['que']:
+			#질문 등록 쿼리문
+			sql = 'INSERT INTO vote_que(vote_id, que, que_type) VALUES(%s, %s, %s);'
+			cursor.execute(sql, (vote_id, question['question'], question['que_type'],))
+			
+			#만약에 선택형 질문이면?
+			if 'select' in question:
+				#등록된 질문 아이디 가져오기.
+				sql = 'SELECT MAX(que_id) AS que_id FROM vote_que;'
+				cursor.execute(sql);
 
-	return vote_id['vote_id']
+				que_id = cursor.fetchone()
+				que_id = que_id['que_id']
+				
+				for select in question['select']:
+					sql = 'INSERT INTO vote_select(que_id, select_content) VALUES(%s, %s);'
+					cursor.execute(sql, (que_id, select,))
+
+	db.commit()
+
+	return "success"
 
 
 
