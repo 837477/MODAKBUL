@@ -7,10 +7,39 @@ import json
 
 BP = Blueprint('vote', __name__)
 
-#투 글들 불러오기(페이지네이션) (OK)
-@BP.route('/votes/<int:page>')
-def get_vote(page):
-	print("hi")
+#투표 글들 불러오기(페이지네이션)
+@BP.route('/get_votes/<int:page>')
+def get_votes(page):
+	result = {}
+
+	votes = select_votes(g.db, page)
+
+	for vote in votes:
+		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+
+	return jsonify(
+		result = "success",
+		votes = votes)
+
+#해당 투표 글 불러오기
+@BP.route('/get_vote/<int:vote_id>')
+def get_vote(vote_id):
+	result = {}
+	vote = select_vote(g.db, vote_id)
+	ques = select_vote_que(g.db, vote_id)
+
+	for que in ques:
+		select = select_vote_select(g.db, que['que_id'])
+		que.update(select = select)
+
+	vote.update(que_list = ques)
+
+	result.update(
+		vote = vote,
+		result = "success")
+
+	return result
 
 #투표 업로드
 @BP.route('/vote_upload', methods=['POST'])
@@ -95,12 +124,34 @@ def vote_answer():
 	#관리자 접근 거절!
 	if check_admin(g.db, user['user_id']): 
 		abort(400)
+
+	#질의응답 정보 불러오기 + json으로 변환 (아래와 같은 형식)
+	answer_str = reqeust.form['answer']
+	answer_replace = answer_str.replace("'", "\"")
+	answer_json = json.loads(answer_replace)
+
+
 	'''
-	temp_answer = {
+	answer_json = {
 		"vote_id": 1,
 		"ans_list": [
 			{"que_id": 1,
 			"que_type": 0,
-			"ans": []}]
+			"ans": [1, 2]},
+
+			{"que_id": 2,
+			"que_type": 1,
+			"ans": [1]},
+
+			{"que_id": 3,
+			"que_type": 2,
+			"ans": "단답형"}]
 		}
 	'''
+
+	#유저 아이디 추가.
+	answer_json.update(user_id = user['user_id'])
+
+	result = insert_vote_user_answer(g.db, answer_json)
+
+	return jsonify(result = result)

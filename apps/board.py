@@ -338,17 +338,18 @@ def post_update():
 		result = "success")
 
 #게시물 삭제
-@BP.route('/post_delete', methods=['POST'])
+@BP.route('/post_delete/<int:post_id>')
 @jwt_required
-def post_delete():
+def post_delete(post_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
-	post_id = request.form['post_id']
-
 	access = access_check_post(g.db, post_id, user['user_id'])
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
-	if access is not 1: abort(400)
+
+	if access is not 1:
+		return jsonify(
+			result = "do not access")
 
 	delete_post(g.db, post_id)
 

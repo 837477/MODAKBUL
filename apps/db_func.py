@@ -74,7 +74,7 @@ def change_user_color(db, user_id, color):
 #보드 테이블 반환
 def select_board(db):
 	with db.cursor() as cursor:
-		sql = "SELECT board_name, board_url FROM board;"
+		sql = "SELECT * FROM board ORDER BY board_rank ASC;"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result 
@@ -162,14 +162,6 @@ def select_gallery_posts(db, tag_in_post_id, page):
 		result = cursor.fetchall()
 	return result
 
-#포스트 파일 반환
-def select_attach(db, post_id):
-	with db.cursor() as cursor:
-		sql = 'SELECT file_path FROM post_attach WHERE post_id = %s;'
-		cursor.execute(sql, (post_id,))
-		result = cursor.fetchall()
-	return result
-
 #업로드 / 수정 / 권한체크 #########################
 
 #포스트 업로드
@@ -201,6 +193,14 @@ def update_post(db, post_id, title, content, anony, user_id):
 		cursor.execute(sql, (title, content, anony, post_id, user_id,))
 	db.commit()
 	return "success"
+
+#포스트 파일 반환
+def select_attach(db, post_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT file_path FROM post_attach WHERE post_id = %s;'
+		cursor.execute(sql, (post_id,))
+		result = cursor.fetchall()
+	return result
 
 #포스트 삭제
 def delete_post(db, post_id):
@@ -300,7 +300,54 @@ def delete_comment(db, comment_id):
 
 #투표 관련#####################################
 
-#투표 추가
+#투표 목록 반환
+def select_votes(db, page):
+	with db.cursor() as cursor:
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, B.join_cnt FROM vote A JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() LIMIT %s, %s;'
+		cursor.execute(sql, ((page-1)*30, page*30))
+		result = cursor.fetchall()
+
+	return result
+
+#투표 메인글 반환
+def select_vote(db, vote_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT * FROM vote WHERE vote_id=%s;'
+		cursor.execute(sql, (vote_id,))
+		result = cursor.fetchone()
+
+		#프론트의 요구로 날짜 형식 변형
+		result['start_date'] = result['start_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+		result['end_date'] = result['end_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+	return result
+
+#해당 투표의 질문들 반환
+def select_vote_que(db, vote_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT que_id, que, que_type FROM vote_que WHERE vote_id=%s;'
+		cursor.execute(sql, (vote_id,))
+		result = cursor.fetchall()
+
+	return result
+
+#해당 질문의 선택지들 반환
+def select_vote_select(db, que_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT select_id, select_content FROM vote_select WHERE que_id=%s;'
+		cursor.execute(sql, (que_id,))
+		result = cursor.fetchall()
+
+	return result
+
+#투표 파일 반환
+def select_vote_attach(db, vote_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT vote_file_path FROM vote_attach WHERE vote_id = %s;'
+		cursor.execute(sql, (vote_id,))
+		result = cursor.fetchone()
+	return result
+
+#투표 등록
 def insert_vote(db, vote):
 	with db.cursor() as cursor:
 		#투표 등록 쿼리문
@@ -354,6 +401,29 @@ def delete_vote(db, vote_id, user_id):
 	db.commit()
 	return "success"
 
+#투표하기
+def insert_vote_user_answer(db, user_answer):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO vote_user_answer(vote_id, que_id, select_id, user_id, answer) VALUES(%s, %s, %s, %s, %s);'
+
+		#답안 리스트를 하나씩 참조
+		for answer in user_answer['ans_list']:
+			#만약 단답형이 아니라면?
+			if answer['que_type'] != 2:
+				#선택형 답안 리스트를 탐색
+				for ans in answer['ans']:
+					cursor.execute(sql, (user_answer['vote_id'], answer['que_id'], ans, user_answer['user_id'], None,))
+			#단답형이라면?
+			else:
+				cursor.execute(sql, (user_answer['vote_id'], answer['que_id'], ans, user_answer['user_id'], answer['ans'],))
+	db.commit()
+
+	return "success"
+
+#중복 투표 방지 체크
+def alreay_check_vote(db, vote_id, user_id):
+	print("hi")
+
 #접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다. 
 #포스트 삭제 권한 확인
@@ -362,8 +432,8 @@ def access_check_post(db, post_id, user_id):
 		return 1
 
 	with db.cursor() as cursor:
-		sql = 'SELECT IF(user_id = "%s", 1, 0) AS access from post where post_id = %s;'
-		cursor.execute(sql, (post_id,))
+		sql = 'SELECT IF(user_id = %s, 1, 0) AS access FROM post WHERE post_id = %s;'
+		cursor.execute(sql, (user_id, post_id,))
 		result = cursor.fetchone()
 	return result['access']
 

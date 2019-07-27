@@ -53,6 +53,8 @@ def c_insert_post(db, user_id, title, content, date, tags, url, img_url):
 
 		post_id = cursor.fetchone()
 
+		tags.append('대외활동')
+
 		for tag in tags:
 			sql = 'INSERT INTO post_tag (post_id, tag_id) VALUES (%s, %s);'
 			cursor.execute(sql, (post_id['post_id'], tag,))
