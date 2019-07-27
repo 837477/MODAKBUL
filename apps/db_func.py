@@ -92,8 +92,8 @@ def select_private_check(db, post_id):
 		else:
 			return 1
 
-#비밀글 주인 확인 (0: 아님, 1: 맞음 반환)
-def private_user_check(db, post_id, user_id):
+#이 포스트의 주인 확인 (0: 아님, 1: 맞음 반환)
+def select_author_check(db, post_id, user_id):
 	with db.cursor() as cursor:
 		sql = "SELECT IF(user_id=%s, 1, 0) AS result FROM post WHERE post_id = %s;"
 		cursor.execute(sql, (user_id, post_id,))
@@ -145,7 +145,7 @@ def select_posts_list(db, tag_in_post_id):
 #해당 포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT post_id, user_id AS author_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_name AS author_name, user_color AS author_color FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, user_id AS author_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
@@ -189,7 +189,7 @@ def insert_post(db, user_id, title, content, anony, tags):
 def update_post(db, post_id, title, content, anony, user_id):
 	#수정은 본인만 가능해야 하므로 AND 연산으로 해당 토큰으로 받은 user와 맞는지도 확인한다.
 	with db.cursor() as cursor:
-		sql = 'UPDATE post SET post_title="%s", post_content="%s", post_anony=%s WHERE post_id=%s; AND user_id=%s;'
+		sql = 'UPDATE post SET post_title=%s, post_content=%s, post_anony=%s WHERE post_id=%s AND user_id=%s;'
 		cursor.execute(sql, (title, content, anony, post_id, user_id,))
 	db.commit()
 	return "success"
@@ -226,7 +226,7 @@ def insert_attach(db, post_id, file, file_S):
 #포스트 파일 삭제 (단일 삭제가 아님. 전체삭제)
 def delete_attach(db, post_id):
 	with db.cursor() as cursor:
-		sql = "DELETE FROM post WHERE post_id = %s"
+		sql = "DELETE FROM post_attach WHERE post_id = %s;"
 		cursor.execute(sql, (post_id,))
 	db.commit()
 	return "success"
@@ -420,9 +420,11 @@ def insert_vote_user_answer(db, user_answer):
 
 	return "success"
 
+'''
 #중복 투표 방지 체크
 def alreay_check_vote(db, vote_id, user_id):
-	print("hi")
+	with db.cursor() as cursor:
+'''	
 
 #접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다. 

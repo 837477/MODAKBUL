@@ -23,7 +23,7 @@ def login_modakbul():
 	
 	if user is None:
 		sejong_api_result = dosejong_api(USER_ID, USER_PW)
-		if sejong_api_result is None:
+		if not sejong_api_result['result']:
 			sejong_api_result = sejong_api(USER_ID, USER_PW)
 			
 		if not sejong_api_result['result']:

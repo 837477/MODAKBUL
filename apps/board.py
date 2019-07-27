@@ -143,15 +143,23 @@ def get_post(post_id):
 			#유저 정보가 아예 없으면 잘못된 접근!
 			if user is None: abort(400)
 
-			#비밀글 작성자 인지 / 관리자인지 확인!
-			user_check = private_user_check(g.db, post_id, user['user_id'])
+			#어드민인지 체크
+			if not check_admin(g.db, user['user_id']):
+				
+				#포스트의 작성자가 해당 토큰이랑 맞는지 비교.
+				user_check = select_author_check(g.db, post_id, user['user_id'])
 
-			if user_check == 1:
-				result = get_post_func(post_id)
+				#작성자 본인이 맞으면?!
+				if user_check == 1:
+					result = get_post_func(post_id)
+					result.update(property = user_check)
 
+				#본인이 아니면?
+				else:
+					return jsonify(
+						result = "do not access") 
 			else:
-				return jsonify(
-					result = "do not access") 
+				result = get_post_func(post_id)
 
 		#토큰이 유효하지 않으면?
 		else:
@@ -161,6 +169,17 @@ def get_post(post_id):
 	#비밀글이 아니면?
 	else:
 		result = get_post_func(post_id)
+
+		if get_jwt_identity():
+			#해당 토큰으로 유저 정보를 불러오고
+			user = select_user(g.db, get_jwt_identity())
+			user_check = select_author_check(g.db, post_id, user['user_id'])
+			if user_check == 1:
+				result.update(property = user_check)
+			else:
+				result.update(property = 0)
+		else:
+			result.update(property = 0)
 
 	return jsonify(result)
 	
@@ -282,9 +301,9 @@ def post_upload():
 							resize_img = img.resize((400,300))
 							resize_img.save('.' + UPLOAD_PATH + allow_check['resize_s'])
 					else:
-						return jsonify(result = "Fail save_file")
+						return jsonify(result = "fail_save_file")
 				else:
-					return jsonify(result = "Wrong_file")
+					return jsonify(result = "wrong_file")
 
 		return jsonify(result = "success")
 
