@@ -97,7 +97,7 @@ def select_private_check(db, post_id):
 		else:
 			return 1
 
-#이 포스트의 주인 확인 (0: 아님, 1: 맞음 반환)
+#포스트의 주인 확인 (0: 아님, 1: 맞음 반환)
 def select_author_check(db, post_id, user_id):
 	with db.cursor() as cursor:
 		sql = "SELECT IF(user_id=%s, 1, 0) AS result FROM post WHERE post_id = %s;"
@@ -306,10 +306,10 @@ def delete_comment(db, comment_id):
 #투표 관련#####################################
 
 #투표 목록 반환
-def select_votes(db, page):
+def select_votes(db):
 	with db.cursor() as cursor:
-		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() LIMIT %s, %s;'
-		cursor.execute(sql, ((page-1)*30, page*30))
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW();'
+		cursor.execute(sql)
 		result = cursor.fetchall()
 
 	return result
@@ -425,14 +425,15 @@ def insert_vote_user_answer(db, user_answer):
 
 	return "success"
 
-'''
-#중복 투표 방지 체크
-def alreay_check_vote(db, vote_id, user_id):
+#중복 투표 체크
+def check_already_vote(db, vote_id, user_id):
 	with db.cursor() as cursor:
-'''	
+		sql = 'SELECT EXISTS (SELECT * FROM vote_user_answer WHERE vote_id=%s AND user_id=%s) AS success;'
+		cursor.execute(sql, (vote_id, user_id,))
+		result = cursor.fetchone()
+	return result['success']
 
 #검색 엔진#####################################
-
 #작성자 / 제목 / 타이틀 검색!
 def select_search(db, topic_list):
 	with db.cursor() as cursor:
@@ -461,7 +462,6 @@ def select_search(db, topic_list):
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
-
 
 #접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다. 

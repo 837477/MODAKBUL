@@ -14,8 +14,15 @@ def search(topic):
 
 	topic_list = topic.split('_')
 	posts = select_search(g.db, topic_list)
+	
+	filter_posts = []
 
 	for post in posts:
+		#비밀글은 그냥 모든 작업을 건너 뛴다.
+		private = select_private_check(g.db, post['post_id'])
+		if private == 1:
+			continue
+
 		#날짜 형식 변경
 		post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
@@ -33,9 +40,6 @@ def search(topic):
 					img_cnt += 1
 				else:
 					file_cnt += 1
-
-		private = select_private_check(g.db, post['post_id'])
-
 		#빈도수 체크
 		count = 0
 		for topic in topic_list:
@@ -47,15 +51,16 @@ def search(topic):
 		post.update(
 			frequency = count,
 			img_cnt = img_cnt,
-			file_cnt = file_cnt,
-			private = private)
+			file_cnt = file_cnt)
+
+		#모든 작업이 끝난 최종 글들만 이 리스트에 추가됨.
+		filter_posts.append(post)
 
 	#빈도수 / 날짜로 정렬!
-	posts = list(posts)
-	posts = sorted(posts, key=itemgetter('frequency', 'post_date'), reverse = True)
-	posts = tuple(posts)
-
+	filter_posts = sorted(filter_posts, key=itemgetter('frequency', 'post_date'), reverse = True)
+	filter_posts = tuple(filter_posts)
+	
 	result.update(
-		posts = posts,
+		posts = filter_posts,
 		result = "success")
 	return jsonify(result)

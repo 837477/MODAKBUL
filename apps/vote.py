@@ -8,11 +8,11 @@ import json
 BP = Blueprint('vote', __name__)
 
 #투표 글들 불러오기(페이지네이션)
-@BP.route('/get_votes/<int:page>')
-def get_votes(page):
+@BP.route('/get_votes')
+def get_votes():
 	result = {}
 
-	votes = select_votes(g.db, page)
+	votes = select_votes(g.db)
 
 	for vote in votes:
 		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
@@ -58,20 +58,20 @@ def vote_upload():
 	vote_str = reqeust.form['vote']
 	vote_replace = vote_str.replace("'", "\"")
 	vote_json = json.loads(vote_replace)
-
+	
 	'''
-	temp_vote = {
-		"title": "투표제목.",
-		"content": "내용입니다.",
+	vote_json = {
+		"title": "55)투표제목.",
+		"content": "55)내용입니다.",
 		"end_date": "2019-08-20 17:30:00",
 		"que_list": [
-			{"que": "체크박스 질문1",
+			{"que": "55)체크박스 질문1",
 			"que_type": 0,
-			"select": ["1답안", "2답안", "3답안"]},
-			{"que": "라디오 질문2",
+			"select": ["55)1답안", "55)2답안", "55)3답안"]},
+			{"que": "55)라디오 질문2",
 			"que_type": 1,
-			"select": ["1답안", "2답안"]},
-			{"que": "단답형 질문3",
+			"select": ["55)1답안", "55)2답안"]},
+			{"que": "55)단답형 질문3",
 			"que_type": 2,
 			}]
 		}
@@ -150,6 +150,10 @@ def vote_answer():
 			"ans": "단답형"}]
 		}
 	'''
+
+	#투표 중복 체크
+	if check_already_vote(g.db, answer_json['vote_id'], user['user_id']) == 1:
+		return jsonify(result = "already_vote")
 
 	#유저 아이디 추가.
 	answer_json.update(user_id = user['user_id'])
