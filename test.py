@@ -8,7 +8,7 @@ header = {
 	'Authorization':"Bearer " + temp
 }
 #Debug Here
-url = "http://73.142.229.204"
+url = "http://221.229.196.237"
 data = {
 	'message' : "who are you? Why do you send me a packet?"
 }

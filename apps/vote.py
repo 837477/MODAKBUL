@@ -15,8 +15,8 @@ def get_votes(page):
 	votes = select_votes(g.db, page)
 
 	for vote in votes:
-		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
-		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
 
 	return jsonify(
 		result = "success",
@@ -28,6 +28,7 @@ def get_vote(vote_id):
 	result = {}
 	vote = select_vote(g.db, vote_id)
 	ques = select_vote_que(g.db, vote_id)
+	attach = select_vote_attach(g.db, vote_id)
 
 	for que in ques:
 		select = select_vote_select(g.db, que['que_id'])
@@ -37,6 +38,7 @@ def get_vote(vote_id):
 
 	result.update(
 		vote = vote,
+		file = attach,
 		result = "success")
 
 	return result

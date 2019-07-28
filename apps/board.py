@@ -14,17 +14,7 @@ IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 
 ###################################################
 #페이지
-@BP.route('/gallery')
-def imag2222e():
-	return render_template('board/index.html')
 
-@BP.route('/posts')
-def image2():
-	return render_template('board/index2.html')	
-
-@BP.route('/v/<int:post_id>')
-def view_page(post_id):
-	return render_template('board/index.html')
 ###################################################
 #포스트 반환
 
@@ -39,14 +29,25 @@ def get_board():
 		result = "success")
 	return jsonify(result)
 
+#게시판 추가
+@BP.route('/board_upload', methods=['POST'])
+@jwt_required
+def board_upload():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	if not check_admin(g.db, user['user_id']): abort(400)
+
 #해당 게시판의 글들 불러오기(페이지네이션) (OK)
 @BP.route('/get_posts/<string:tag_string>/<int:page>')
 def get_posts_page(tag_string, page):
 	result = {}
 
+	#태그 스플릿 작업
 	tag_list = tag_string.split('_')
 	tag_in_post_id = select_tag_in_posts(tag_list)
 	
+	#게시물들 불러오기.
 	posts = select_posts_page(g.db, tag_in_post_id, page)
 
 	#포스트 목록들을 불러온다
@@ -70,6 +71,7 @@ def get_posts_page(tag_string, page):
 				else:
 					file_cnt += 1
 		
+		#비밀글 여부 확인.
 		private = select_private_check(g.db, post['post_id'])
 		
 
@@ -301,7 +303,8 @@ def post_upload():
 							resize_img = img.resize((400,300))
 							resize_img.save('.' + UPLOAD_PATH + allow_check['resize_s'])
 					else:
-						return jsonify(result = "fail_save_file")
+						delete_post(g.db, post_id)
+						return jsonify(result = "fail")
 				else:
 					return jsonify(result = "wrong_file")
 

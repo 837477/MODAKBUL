@@ -68,16 +68,21 @@ def change_user_color(db, user_id, color):
 		sql = "UPDATE user SET user_color=%s WHERE user_id=%s;"
 		cursor.execute(sql, (color, user_id,))
 	db.commit()
+	return "success"
 
 #보드 / 포스트 관련#############################
 
-#보드 테이블 반환
+#보드(메뉴 탭) 반환
 def select_board(db):
 	with db.cursor() as cursor:
 		sql = "SELECT * FROM board ORDER BY board_rank ASC;"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result 
+
+#보드(메뉴) 추가
+def insert_board(db, board):
+	print("hello")
 
 #비밀글 확인 (0: 공개, 1:비밀 반환)
 def select_private_check(db, post_id):
@@ -303,22 +308,22 @@ def delete_comment(db, comment_id):
 #투표 목록 반환
 def select_votes(db, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, B.join_cnt FROM vote A JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() LIMIT %s, %s;'
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 
 	return result
 
-#투표 메인글 반환
+#해당 투표 메인글 반환
 def select_vote(db, vote_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT * FROM vote WHERE vote_id=%s;'
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.vote_id = %s'
 		cursor.execute(sql, (vote_id,))
 		result = cursor.fetchone()
 
 		#프론트의 요구로 날짜 형식 변형
-		result['start_date'] = result['start_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
-		result['end_date'] = result['end_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+		result['start_date'] = result['start_date'].strftime("%Y년 %m월 %d일")
+		result['end_date'] = result['end_date'].strftime("%Y년 %m월 %d일")
 	return result
 
 #해당 투표의 질문들 반환
@@ -344,7 +349,7 @@ def select_vote_attach(db, vote_id):
 	with db.cursor() as cursor:
 		sql = 'SELECT vote_file_path FROM vote_attach WHERE vote_id = %s;'
 		cursor.execute(sql, (vote_id,))
-		result = cursor.fetchone()
+		result = cursor.fetchall()
 	return result
 
 #투표 등록
@@ -425,6 +430,38 @@ def insert_vote_user_answer(db, user_answer):
 def alreay_check_vote(db, vote_id, user_id):
 	with db.cursor() as cursor:
 '''	
+
+#검색 엔진#####################################
+
+#작성자 / 제목 / 타이틀 검색!
+def select_search(db, topic_list):
+	with db.cursor() as cursor:
+		sql = 'SELECT * FROM v_post WHERE '
+
+		for topic in topic_list:
+			#작성자 찾기
+			sql += 'user_name LIKE '
+			like_topic = '"%' + topic + '%" OR '
+			sql += like_topic
+
+			#타이틀 찾기
+			sql += 'post_title LIKE '
+			like_topic = '"%' + topic + '%" OR '
+			sql += like_topic
+
+			#본문 찾기
+			sql += 'post_content LIKE '
+			like_topic = '"%' + topic + '%"'
+			sql += like_topic
+
+			if topic is not topic_list[-1]:
+				sql += ' OR '
+
+		sql += ' ORDER BY post_date DESC;'
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
 
 #접근 권환 확인 ################################
 #수정권한은 쿼리문에서 AND로 비교한다. 

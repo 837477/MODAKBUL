@@ -1,0 +1,61 @@
+from flask import *
+from werkzeug import *
+from flask_jwt_extended import *
+from operator import itemgetter
+from db_func import *
+
+
+BP = Blueprint('search', __name__)
+
+#검색!
+@BP.route('/search/<string:topic>')
+def search(topic):
+	result = {}
+
+	topic_list = topic.split('_')
+	posts = select_search(g.db, topic_list)
+
+	for post in posts:
+		#날짜 형식 변경
+		post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+
+		#해당 포스트 아이디의 파일들을 불러온다.
+		db_files = select_attach(g.db, post['post_id'])
+		img_cnt = 0
+		file_cnt = 0
+
+		#파일 개수 파악 시작!!
+		for file in db_files:
+			#이건 미리보기 파일이라 갯수에 포함X
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] != "S#":
+				#이미지냐? 아니면 일반파일이냐?
+				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
+					img_cnt += 1
+				else:
+					file_cnt += 1
+
+		private = select_private_check(g.db, post['post_id'])
+
+		#빈도수 체크
+		count = 0
+		for topic in topic_list:
+			count += post['post_title'].count(topic)
+			count += post['post_content'].count(topic)
+			if post['user_name'] is not None:
+				count += post['user_name'].count(topic)
+
+		post.update(
+			frequency = count,
+			img_cnt = img_cnt,
+			file_cnt = file_cnt,
+			private = private)
+
+	#빈도수 / 날짜로 정렬!
+	posts = list(posts)
+	posts = sorted(posts, key=itemgetter('frequency', 'post_date'), reverse = True)
+	posts = tuple(posts)
+
+	result.update(
+		posts = posts,
+		result = "success")
+	return jsonify(result)
