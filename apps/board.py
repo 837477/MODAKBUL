@@ -19,17 +19,28 @@ IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 #포스트 반환
 
 #게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
-@BP.route('/get_board')
-def get_board():
+@BP.route('/get_boards')
+def get_boards():
 	result = {}
-	board = select_board(g.db)
+	boards = select_boards(g.db)
+
+	result.update(
+		boards = boards,
+		result = "success")
+	return jsonify(result)
+
+#게시판 단일 정보 불러오기
+@BP.route('/get_board/<string:board_url>')
+def get_board(board_url):
+	result = {}
+	board = select_board(g.db, board_url)
 
 	result.update(
 		board = board,
 		result = "success")
 	return jsonify(result)
 
-#게시판 추가
+#게시판 추가 (해야한다!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
 @BP.route('/board_upload', methods=['POST'])
 @jwt_required
 def board_upload():

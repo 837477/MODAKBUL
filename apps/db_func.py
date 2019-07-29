@@ -89,12 +89,20 @@ def delete_user_tag(db, user_id, tag):
 #보드 / 포스트 관련#############################
 
 #보드(메뉴 탭) 반환
-def select_board(db):
+def select_boards(db):
 	with db.cursor() as cursor:
 		sql = "SELECT * FROM board ORDER BY board_rank ASC;"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result 
+
+#보드(단일) 반환
+def select_board(db, board_url):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM board WHERE board_url=%s;"
+		cursor.execute(sql)
+		result = cursor.fetchone()
+	return result
 
 #보드(메뉴) 추가
 def insert_board(db, board):
@@ -450,6 +458,7 @@ def check_already_vote(db, vote_id, user_id):
 	return result['success']
 
 #검색 엔진#####################################
+
 #작성자 / 제목 / 타이틀 검색!
 def select_search(db, topic_list):
 	with db.cursor() as cursor:

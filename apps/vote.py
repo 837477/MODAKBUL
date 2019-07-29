@@ -128,10 +128,9 @@ def vote_answer():
 		abort(400)
 
 	#질의응답 정보 불러오기 + json으로 변환 (아래와 같은 형식)
-	answer_str = reqeust.form['answer']
+	answer_str = request.form['answer']
 	answer_replace = answer_str.replace("'", "\"")
 	answer_json = json.loads(answer_replace)
-
 
 	'''
 	answer_json = {
