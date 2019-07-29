@@ -43,15 +43,23 @@ def get_board(board_url):
 		result = "success")
 	return jsonify(result)
 
-#게시판 추가 (해야한다!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
+#게시판 추가 / 삭제 / 즉, 수정! 
 @BP.route('/board_upload', methods=['POST'])
 @jwt_required
 def board_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
-	if not check_admin(g.db, user['user_id']): abort(400)
+	#관리자 접근인지 확인
+	if not check_admin(g.db, user['user_id']):
+		abort(400)
 
+	boards = request.json['boards']
+	
+	result = update_board(g.db, boards)
+
+	return jsonify(result = result)
+	
 #해당 게시판의 글들 불러오기(페이지네이션) (OK)
 @BP.route('/get_posts/<string:tag_string>/<int:page>')
 def get_posts_page(tag_string, page):

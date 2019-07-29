@@ -100,9 +100,20 @@ def select_user_list(db):
 #######################################################
 #보드 / 포스트 관련#######################################
 
-#보드(메뉴) 추가
-def insert_board(db, board):
-	print("hello")
+#보드(메뉴) 추가 / 삭제 즉, 수정!
+def update_board(db, boards):
+	with db.cursor() as cursor:
+		#기존 보드 삭제
+		sql = "DELETE FROM baord;"
+		cursor.execute(sql)
+
+		#갱신된 보드 추가
+		sql = "INSERT INTO board VALUES(%s, %s, %s, %s);"
+		for board in boards:
+			cursor.execute(sql, (board['board_url'], board['board_rank'], board['board_name'], board['board_access'],))
+	db.commit()
+	#이 방식은 랭크 수정의 편리를 위해 함 (자주 사용될 API가 아니기 때문)
+	return "success"
 
 #보드(메뉴 탭) 반환
 def select_boards(db):
