@@ -7,41 +7,11 @@ import json
 
 BP = Blueprint('vote', __name__)
 
-#투표 글들 불러오기(페이지네이션)
-@BP.route('/get_votes')
-def get_votes():
-	result = {}
+#######################################################
+#페이지 URL#############################################
 
-	votes = select_votes(g.db)
-
-	for vote in votes:
-		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
-		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
-
-	return jsonify(
-		result = "success",
-		votes = votes)
-
-#해당 투표 글 불러오기
-@BP.route('/get_vote/<int:vote_id>')
-def get_vote(vote_id):
-	result = {}
-	vote = select_vote(g.db, vote_id)
-	ques = select_vote_que(g.db, vote_id)
-	attach = select_vote_attach(g.db, vote_id)
-
-	for que in ques:
-		select = select_vote_select(g.db, que['que_id'])
-		que.update(select = select)
-
-	vote.update(que_list = ques)
-
-	result.update(
-		vote = vote,
-		file = attach,
-		result = "success")
-
-	return result
+#######################################################
+#투표 기능###############################################
 
 #투표 업로드
 @BP.route('/vote_upload', methods=['POST'])
@@ -81,38 +51,6 @@ def vote_upload():
 	vote_json.update(user_id = user['user_id'])
 
 	result = insert_vote(g.db, vote_json)
-
-	return jsonify(result = result)
-
-#투표 마감기한 수정
-@BP.route('/vote_update', methods=['POST'])
-@jwt_required
-def vote_update():
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	#관리자 아니면 접근 거절!
-	if not check_admin(g.db, user['user_id']): 
-		abort(400)
-
-	end_date = reqeust.form['end_date']
-
-	result = update_vote(user['user_id'], end_date)
-
-	return jsonify(result = result)
-
-#투표 삭제
-@BP.route('/vote_delete/<int:vote_int>')
-@jwt_required
-def vote_delete(vote_id):
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	#관리자 아니면 접근 거절!
-	if not check_admin(g.db, user['user_id']): 
-		abort(400)
-
-	result = delete_vote(g.db, vote_id, user['user_id'])
 
 	return jsonify(result = result)
 
@@ -160,3 +98,73 @@ def vote_answer():
 	result = insert_vote_user_answer(g.db, answer_json)
 
 	return jsonify(result = result)
+
+#투표 글들 불러오기(페이지네이션)
+@BP.route('/get_votes')
+def get_votes():
+	result = {}
+
+	votes = select_votes(g.db)
+
+	for vote in votes:
+		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
+
+	return jsonify(
+		result = "success",
+		votes = votes)
+
+#해당 투표 글 불러오기
+@BP.route('/get_vote/<int:vote_id>')
+def get_vote(vote_id):
+	result = {}
+	vote = select_vote(g.db, vote_id)
+	ques = select_vote_que(g.db, vote_id)
+	attach = select_vote_attach(g.db, vote_id)
+
+	for que in ques:
+		select = select_vote_select(g.db, que['que_id'])
+		que.update(select = select)
+
+	vote.update(que_list = ques)
+
+	result.update(
+		vote = vote,
+		file = attach,
+		result = "success")
+
+	return result
+
+#투표 마감기한 수정
+@BP.route('/vote_update', methods=['POST'])
+@jwt_required
+def vote_update():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	end_date = reqeust.form['end_date']
+
+	result = update_vote(user['user_id'], end_date)
+
+	return jsonify(result = result)
+
+#투표 삭제
+@BP.route('/vote_delete/<int:vote_int>')
+@jwt_required
+def vote_delete(vote_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	result = delete_vote(g.db, vote_id, user['user_id'])
+
+	return jsonify(result = result)
+
+

@@ -66,6 +66,10 @@ def init_db():
         cursor.execute(sql)
         sql = open("database/table/table_view_post.sql").read()
         cursor.execute(sql)
+        sql = open("database/table/table_variable.sql").read()
+        cursor.execute(sql)
+        sql = open("database/table/table_department.sql").read()
+        cursor.execute(sql)
 
     db.commit()
     db.close()

@@ -4,19 +4,19 @@ from flask_jwt_extended import *
 from PIL import Image
 from db_func import *
 
-#import hashlib
-
 BP = Blueprint('board', __name__)
 
 UPLOAD_PATH = "/static/files/"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'hwp', 'txt', 'doc', 'xls', 'ppt', 'pptx', 'xlsx', 'docx', 'pdf', 'snd', 'otf', 'art', 'gem', 'wp5', 'wpg', 'wpd', 'wp', 'emg', 'opt', 'info', 'wmf', 'md', 'xla', 'pps', 'dot', 'lbk', 'dcx', 'qdp', 'dat', 'dbf', 'obj', 'rtf', 'dmg', 'zip', '7z', 'rar', 'jar', 'apk', 'pak', 'tar', 'tiff', 'tif', 'eml', 'pic', 'dcx', 'ntf', 'log', 'gz', 'ta.z', 'ta.gz', 'xlw', 'egg', 'ico', 'mpg', 'pif'])
 IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 
-###################################################
-#페이지
+#######################################################
+#페이지 URL#############################################
 
-###################################################
-#포스트 반환
+
+
+#######################################################
+#포스트 반환#############################################
 
 #게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/get_boards')
@@ -270,7 +270,7 @@ def get_image(page):
 	return jsonify(result)
 
 #######################################################
-#포스트 업로드 및 수정 및 삭제
+#포스트 업로드 및 수정 및 삭제###############################
 
 #게시물 업로드 (OK)
 @BP.route('/post_upload', methods=['POST'])
@@ -390,7 +390,7 @@ def post_delete(post_id):
 		result = "success")
 
 #######################################################
-#조회수 / 댓글 / 좋아요 처리
+#조회수 / 댓글 / 좋아요 처리################################
 
 #조회수 증가 (OK)
 @BP.route('/view_up/<int:post_id>')
@@ -444,29 +444,6 @@ def comment_upload():
 	return jsonify(
 		result = result)
 
-#댓글 수정 (보류) - 현재 사용 안함.
-@BP.route('/comment_update', methods=['POST'])
-@jwt_required
-def comment_update():
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	comment_id = request.form['comment_id']
-
-	'''
-	access = access_check_comment(g.db, comment_id, user['user_id'])
-	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
-	if access is not 1: abort(400)
-	'''
-
-	comment = request.form['comment']
-	anony = request.form['anony']
-
-	result = update_comment(g.db, comment_id, comment, anony, user['user_id'])
-
-	return jsonify(
-		result = result)
-
 #댓글 삭제 (OK)
 @BP.route('/comment_delete/<int:comment_id>')
 @jwt_required
@@ -477,21 +454,15 @@ def comment_delete(comment_id):
 	access = access_check_comment(g.db, comment_id, user['user_id'])
 
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
-	if access is not 1: abort(400)
+	if not access: abort(400)
 
 	result = delete_comment(g.db, comment_id)
 
 	return jsonify(
 		result = result)
 
-#함수 #########################################################
-'''
-def to_hash(pw):
-	sha = hashlib.new('md5')
-	sha.update(pw.encode('utf-8'))
-	print(sha.hexdigest())
-	return sha.hexdigest()
-'''
+#######################################################
+#함수 ##################################################
 
 #파일 이름 변환
 def file_name_encode(file_name):

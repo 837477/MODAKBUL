@@ -6,14 +6,16 @@ from sejong_account import *
 
 BP = Blueprint('auth', __name__)
 
-###################################################
-#페이지
+#######################################################
+#페이지 URL#############################################
 @BP.route('/sign-in')
 def sign_in():
 	return render_template('auth/index.html')
-###################################################
 
-#로그인 및 회원가입(토큰발행) (OK)
+#######################################################
+#회원 기능###############################################
+
+#로그인 및 회원가입(토큰발행)
 @BP.route('/sign-in-up', methods=['POST'])
 def login_modakbul():
 	USER_ID = request.form['id']
@@ -86,6 +88,9 @@ def user_color():
 	result = change_user_color(g.db, user['user_id'], new_color)
 	return jsonify(result = result)
 
+#######################################################
+#관리자 권한#############################################
+
 #블랙리스트 등록
 @BP.route('/user-black-apply', methods=['POST'])
 @jwt_required
@@ -130,5 +135,25 @@ def user_black_cancle():
 	return jsonify(
 		result = result)
 
+#총 회원 반환
+@BP.route('/get_user_list')
+@jwt_required
+def get_user_list():
+	result = {}
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
 
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	user_list = select_user_list(g.db)
+
+	for user in user_list:
+		tags = select_user_tag(g.db, user['user_id'])
+		user.update(user_tags = tags)
+
+	return jsonify(
+		result = "result",
+		user_list = user_list)
 
