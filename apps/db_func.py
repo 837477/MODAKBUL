@@ -532,3 +532,33 @@ def select_search(db, topic_list):
 		result = cursor.fetchall()
 	return result
 
+#######################################################
+#관리자 전용#############################################
+
+#정적 variable 추가
+def insert_variable(db, key, value):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO variable VALUES(%s, %s);"
+		cursor.execute(sql, (key, value,))
+	db.commit()
+
+	return "success"
+
+#정적 variable 반환
+def select_variable(db):
+	with db.cursor() as cursor:
+		sql = 'SELECT * FROM variable;'
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#정적 variable 삭제
+def delete_variable(db, key):
+	with db.cursor() as cursor:
+		sql = 'DELETE FROM variable WHERE key=%s;'
+		cursor.execute(sql, (key,))
+	db.commit()
+
+	return "success"
+
+
