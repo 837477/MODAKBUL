@@ -35,6 +35,9 @@ def get_board(board_url):
 	result = {}
 	board = select_board(g.db, board_url)
 
+	if board is None:
+		return jsonify(reuslt = "board is empty")
+
 	result.update(
 		board = board,
 		result = "success")
@@ -200,8 +203,15 @@ def get_post(post_id):
 def get_post_func(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
+
+	if post is None:
+		return jsonify(reuslt = "define post")
+
 	attach = select_attach(g.db, post_id)
 	comments = select_comment(g.db, post_id)
+
+	#프론트의 요구로 날짜 형식 변형
+	post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
 	files = []
 	#리사이즈 된 파일은 보내줄 필요가 없기 때문에 걸러줌.

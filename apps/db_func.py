@@ -189,8 +189,7 @@ def select_post(db, post_id):
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
-		#프론트의 요구로 날짜 형식 변형
-		result['post_date'] = result['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
+		
 
 	return result
 
@@ -411,9 +410,6 @@ def select_vote(db, vote_id):
 		cursor.execute(sql, (vote_id,))
 		result = cursor.fetchone()
 
-		#프론트의 요구로 날짜 형식 변형
-		result['start_date'] = result['start_date'].strftime("%Y년 %m월 %d일")
-		result['end_date'] = result['end_date'].strftime("%Y년 %m월 %d일")
 	return result
 #해당 투표의 질문들 반환
 def select_vote_que(db, vote_id):
@@ -544,21 +540,53 @@ def insert_variable(db, key, value):
 
 	return "success"
 
-#정적 variable 반환
-def select_variable(db):
+#정적 variable 리스트 반환
+def select_variables(db):
 	with db.cursor() as cursor:
 		sql = 'SELECT * FROM variable;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
 
+#정적 varialbe의 특정 value 반환
+def select_value(db, key):
+	with db.cursor() as cursor:
+		sql = "SELECT value FROM variable WHERE v_key=%s;"
+		cursor.execute(sql, (key,))
+		result = cursor.fetchone()
+	return result
+
 #정적 variable 삭제
 def delete_variable(db, key):
 	with db.cursor() as cursor:
-		sql = 'DELETE FROM variable WHERE key=%s;'
+		sql = 'DELETE FROM variable WHERE v_key=%s;'
 		cursor.execute(sql, (key,))
 	db.commit()
 
 	return "success"
 
+#부서 등록
+def insert_department(db, dm_name, dm_chairman, dm_intro):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO department(dm_name, dm_chairman, dm_intro) VALUES(%s, %s, %s);"
+		cursor.execute(sql, (dm_name, dm_chairman, dm_intro,))
+	db.commit()
 
+	return "success"
+
+#부서 반환
+def select_department(db):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM department;"
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#부서 삭제
+def delete_department(db, dm_id):
+	with db.cursor() as cursor:
+		sql = 'DELETE FROM department WHERE dm_id=%s;'
+		cursor.execute(sql, (dm_id,))
+	db.commit()
+
+	return "success"

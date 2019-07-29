@@ -119,8 +119,16 @@ def get_votes():
 def get_vote(vote_id):
 	result = {}
 	vote = select_vote(g.db, vote_id)
+
+	if vote is None:
+		return jsonify(reuslt = "define vote")
+
 	ques = select_vote_que(g.db, vote_id)
 	attach = select_vote_attach(g.db, vote_id)
+
+	#프론트의 요구로 날짜 형식 변형
+	vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+	vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
 
 	for que in ques:
 		select = select_vote_select(g.db, que['que_id'])
