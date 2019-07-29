@@ -20,7 +20,7 @@ def login_modakbul():
 	USER_PW = request.form['pw']
 
 	user = select_user(g.db, USER_ID)
-	
+
 	if user is None:
 		sejong_api_result = dosejong_api(USER_ID, USER_PW)
 		if not sejong_api_result['result']:
@@ -38,6 +38,11 @@ def login_modakbul():
 
 	user = select_user(g.db, USER_ID)
 	
+	#블랙리스트 인지 확인
+	user_tag = select_user_tag(g.db, user['user_id'])
+	if "블랙리스트" in user_tag:
+		return jsonify(result = "blacklist")
+
 	if check_password_hash(user['pw'], USER_PW):
 		return jsonify(
 			result = "success",
@@ -55,6 +60,10 @@ def get_userinfo():
 	if user is None: abort(400)
 
 	tags = select_user_tag(g.db, user['user_id'])
+
+	if "블랙리스트" in tags:
+		return jsonify(result = "blacklist")
+
 	user_post_like = select_user_post_like(g.db, user['user_id'])
 	user_comments = select_user_comments(g.db, user['user_id'])
 	
@@ -76,3 +85,50 @@ def user_color():
 	new_color = request.form['new_color']
 	result = change_user_color(g.db, user['user_id'], new_color)
 	return jsonify(result = result)
+
+#블랙리스트 등록
+@BP.route('/user-black-apply', methods=['POST'])
+@jwt_required
+def user_black_apply():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	target_id = request.form['target_id']
+
+	target = select_user(g.db, target_id)
+	if target is None:
+		return jsonify(result = "no member")
+
+	result = insert_user_tag(g.db, target['user_id'], "블랙리스트")
+
+	return jsonify(
+		result = result)
+
+#블랙리스트 해지
+@BP.route('/user-black-cancle', methods=['POST'])
+@jwt_required
+def user_black_cancle():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	target_id = request.form['target_id']
+
+	target = select_user(g.db, target_id)
+	if target is None:
+		return jsonify(result = "no member")
+
+	result = delete_user_tag(g.db, target['user_id'], "블랙리스트")
+
+	return jsonify(
+		result = result)
+
+
+

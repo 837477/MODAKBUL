@@ -22,7 +22,7 @@ def insert_user(db, user_data, user_major):
 	db.commit()
 	return "success"
 
-#사용자가 태그 반환
+#사용자 태그 반환
 def select_user_tag(db, user_id):
 	with db.cursor() as cursor:
 		sql = "SELECT tag_id FROM user_tag WHERE user_id=%s;"
@@ -68,6 +68,22 @@ def change_user_color(db, user_id, color):
 		sql = "UPDATE user SET user_color=%s WHERE user_id=%s;"
 		cursor.execute(sql, (color, user_id,))
 	db.commit()
+	return "success"
+
+#사용자 태그 추가
+def insert_user_tag(db, user_id, tag):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO user_tag(user_id, tag_id) VALUES(%s, %s);"
+		cursor.execute(sql, (user_id, tag,))
+	db.commit()
+	return "success"
+
+#사용자 태그 삭제
+def delete_user_tag(db, user_id, tag):
+	with db.cursor() as cursor:
+		sql = "DELETE FROM user_tag WHERE user_id=%s AND tag_id=%s;"
+		cursor.execute(sql, (user_id, tag,))
+	do.commit()
 	return "success"
 
 #보드 / 포스트 관련#############################
