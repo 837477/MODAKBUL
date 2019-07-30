@@ -97,6 +97,14 @@ def select_user_list(db):
 		result = cursor.fetchall()
 	return result
 
+#사용자 비밀번호 변경
+def update_user_pw(db, user_id, new_pw):
+	with db.cursor() as cursor:
+		sql = "UPDATE user SET pw = %s WHERE user_id = %s;"
+		cursor.execute(sql, (new_pw, user_id,))
+	db.commit()
+	return "success"
+
 #######################################################
 #보드 / 포스트 관련#######################################
 
@@ -126,8 +134,8 @@ def select_boards(db):
 #보드(단일) 반환
 def select_board(db, board_url):
 	with db.cursor() as cursor:
-		sql = "SELECT * FROM board WHERE board_url=%s;"
-		cursor.execute(sql)
+		sql = "SELECT * FROM board WHERE board_url = %s;"
+		cursor.execute(sql, (board_url,))
 		result = cursor.fetchone()
 	return result
 
@@ -316,7 +324,7 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, IF(A.comment_anony=0, A.user_id, '익명') AS user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, IF(A.comment_anony=0, B.user_color, '#D8D8D8') AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
+		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, IF(A.comment_anony=0, B.user_color, '#D8D8D8') AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
 
@@ -384,7 +392,7 @@ def insert_vote(db, vote):
 
 	db.commit()
 
-	return "success"
+	return vote_id
 
 #투표 참여 (사용자)
 def insert_vote_user_answer(db, user_answer):
@@ -408,7 +416,7 @@ def insert_vote_user_answer(db, user_answer):
 #투표 글목록 반환
 def select_votes(db):
 	with db.cursor() as cursor:
-		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW();'
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() ORDER BY A.end_date DESC;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 
@@ -439,6 +447,14 @@ def select_vote_select(db, que_id):
 
 	return result
 
+#투표 파일 등록
+def insert_vote_attach(db, vote_id, file):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO vote_attach (vote_id, vote_file_path) VALUES (%s, %s);"
+		cursor.execute(sql, (vote_id, file,))
+	db.commit()
+	return "success"
+
 #투표 파일 반환
 def select_vote_attach(db, vote_id):
 	with db.cursor() as cursor:
@@ -461,7 +477,7 @@ def delete_vote(db, vote_id, user_id):
 	#투표 삭제는 어드민만 가능! (어차피 작성자 또한 어드민)
 	with db.cursor() as cursor:
 		sql = "DELETE FROM vote WHERE vote_id=%s AND user_id=%s;"
-		cursor.execute(sql, (post_id, user_id))
+		cursor.execute(sql, (vote_id, user_id))
 	db.commit()
 	return "success"
 
@@ -601,3 +617,20 @@ def delete_department(db, dm_id):
 	db.commit()
 
 	return "success"
+
+#######################################################
+#로그 기록###############################################
+
+#로그 등록
+def insert_log(db, user_id, log_url):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO log(user_id, log_url) VALUES(%s, %s);'
+		cursor.execute(sql, (user_id, log_url,))
+	db.commit()
+	return "success"
+
+#######################################################
+#로그 기록###############################################
+
+
+

@@ -44,6 +44,9 @@ def variable_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
@@ -62,6 +65,9 @@ def variable_upload():
 def variable_delete():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
@@ -94,6 +100,9 @@ def department_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
@@ -107,14 +116,15 @@ def department_upload():
 	return jsonify(
 		result = result)
 
-
-
 #부서 삭제
 @BP.route('/department_delete', methods=['POST'])
 @jwt_required
 def department_delete():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
@@ -127,4 +137,26 @@ def department_delete():
 	return jsonify(
 		result = result)
 
+#관리자 비밀번호 변경
+@BP.route('/change_pw', methods=['POST'])
+@jwt_required
+def change_pw():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+	
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	before_pw = request.form['before_pw']
+	new_pw = request.form['new_pw']
+
+	if check_password_hash(user['pw'], before_PW):
+		result = update_user_pw(g.db, user['user_id'], generate_password_hash(new_pw))
+	else:
+		result = "wrong before pw"
+
+	return jsonify(result = result)

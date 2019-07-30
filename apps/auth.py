@@ -16,7 +16,7 @@ def sign_in():
 #회원 기능###############################################
 
 #로그인 및 회원가입(토큰발행)
-@BP.route('/sign-in-up', methods=['POST'])
+@BP.route('/sign_in_up', methods=['POST'])
 def login_modakbul():
 	USER_ID = request.form['id']
 	USER_PW = request.form['pw']
@@ -54,12 +54,15 @@ def login_modakbul():
 		return jsonify(result = "incorrect password")
 
 #회원정보 반환 (OK)
-@BP.route('/get-userinfo')
+@BP.route('/get_userinfo')
 @jwt_required
 def get_userinfo():
 	user = select_user(g.db, get_jwt_identity())
 	#DB에 없는 유저임. 뭔가 이상하게 접근한 사람
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	tags = select_user_tag(g.db, user['user_id'])
 
@@ -79,11 +82,15 @@ def get_userinfo():
 		user_comments = user_comments)
 
 #회원 컬러 변경 (OK)
-@BP.route('/user-color', methods=['POST'])
+@BP.route('/user_color', methods=['POST'])
 @jwt_required
 def user_color():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	new_color = request.form['new_color']
 	result = change_user_color(g.db, user['user_id'], new_color)
 	return jsonify(result = result)
@@ -92,11 +99,14 @@ def user_color():
 #관리자 권한#############################################
 
 #블랙리스트 등록
-@BP.route('/user-black-apply', methods=['POST'])
+@BP.route('/user_black_apply', methods=['POST'])
 @jwt_required
 def user_black_apply():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 계정이 아니면 ㅃ2
 	if not check_admin(g.db, user['user_id']):
@@ -114,11 +124,14 @@ def user_black_apply():
 		result = result)
 
 #블랙리스트 해지
-@BP.route('/user-black-cancle', methods=['POST'])
+@BP.route('/user_black_cancle', methods=['POST'])
 @jwt_required
 def user_black_cancle():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 계정이 아니면 ㅃ2
 	if not check_admin(g.db, user['user_id']):
@@ -142,6 +155,9 @@ def get_user_list():
 	result = {}
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 계정이 아니면 ㅃ2
 	if not check_admin(g.db, user['user_id']):

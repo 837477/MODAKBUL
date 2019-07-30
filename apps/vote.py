@@ -6,7 +6,8 @@ from db_func import *
 import json
 
 BP = Blueprint('vote', __name__)
-
+UPLOAD_PATH = "/static/files/"
+IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 #######################################################
 #페이지 URL#############################################
 
@@ -20,15 +21,48 @@ def vote_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
 	#보트 정보 불러오기 + json으로 변환 (아래와 같은 형식)
-	vote_str = reqeust.form['vote']
+	vote_str = request.form['vote']
+	file = request.files.getlist('file')
+
 	vote_replace = vote_str.replace("'", "\"")
 	vote_json = json.loads(vote_replace)
-	
+
+	#유저 아이디 추가.
+	vote_json.update(user_id = user['user_id'])
+
+	vote_id = insert_vote(g.db, vote_json)
+
+	if file:
+		file = file[0]
+
+		#파일 확장자 / 이름길이 체크
+		file_check = file_name_encode(file.filename)
+
+		if file_check is not None:
+			#DB에 파일 추가!
+			result = insert_vote_attach(g.db, vote_id, file_check)
+
+			if result == "success":
+				file.save('.' + UPLOAD_PATH + file_check)
+			else:
+				delete_vote(g.db, vote_id, user['user_id'])
+				return jsonify(result = "fail")
+		else:
+			return jsonify(result = "wrong file")	
+
+	if vote_id is None:
+		return jsonify(result = "fail")
+	else:
+		return jsonify(result = "success")
+
 	'''
 	vote_json = {
 		"title": "55)투표제목.",
@@ -46,13 +80,6 @@ def vote_upload():
 			}]
 		}
 	'''
-	
-	#유저 아이디 추가.
-	vote_json.update(user_id = user['user_id'])
-
-	result = insert_vote(g.db, vote_json)
-
-	return jsonify(result = result)
 
 #투표 하기
 @BP.route('/vote_answer', methods=['POST'])
@@ -61,9 +88,12 @@ def vote_answer():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	#관리자 접근 거절!
 	if check_admin(g.db, user['user_id']): 
-		abort(400)
+		return jsonify(result = "admin can not vote")
 
 	#질의응답 정보 불러오기 + json으로 변환 (아래와 같은 형식)
 	answer_str = request.form['answer']
@@ -150,6 +180,9 @@ def vote_update():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
@@ -161,12 +194,15 @@ def vote_update():
 	return jsonify(result = result)
 
 #투표 삭제
-@BP.route('/vote_delete/<int:vote_int>')
+@BP.route('/vote_delete/<int:vote_id>')
 @jwt_required
 def vote_delete(vote_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+	
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
@@ -174,5 +210,19 @@ def vote_delete(vote_id):
 	result = delete_vote(g.db, vote_id, user['user_id'])
 
 	return jsonify(result = result)
+
+#######################################################
+#함수 ##################################################
+def file_name_encode(file_name):
+	#허용 확장자 / 길이인지 확인.
+	if secure_filename(file_name).split('.')[-1] in IMG_EXTENSIONS and len(file_name) < 240:
+
+		#이름 변환!
+		path_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_' + file_name
+
+		return path_name
+	
+	else:
+		return None
 
 

@@ -20,23 +20,69 @@ IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 
 #게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/get_boards')
+@jwt_optional
 def get_boards():
 	result = {}
 	boards = select_boards(g.db)
 
+	#토큰이 있으면?
+	if get_jwt_identity():
+		user = select_user(g.db, get_jwt_identity())
+
+		#로그 기록
+		insert_log(g.db, user['user_id'], request.url_rule)
+
+		#관리자이면?
+		if check_admin(g.db, user['user_id']):
+			for board in boards:
+				board['board_access'] = 1
+		#일반 유저이면?
+		else:
+			for board in boards:
+				if board['board_access'] == 0:
+					board['board_access'] = 1
+				else:
+					board['board_access'] = 0
+	else:
+		for board in boards:
+				board['board_access'] = 0
+
 	result.update(
 		boards = boards,
 		result = "success")
+
 	return jsonify(result)
 
 #게시판 단일 정보 불러오기
 @BP.route('/get_board/<string:board_url>')
+@jwt_optional
 def get_board(board_url):
 	result = {}
+
 	board = select_board(g.db, board_url)
 
 	if board is None:
 		return jsonify(reuslt = "board is empty")
+
+	#토큰이 있으면?
+	if get_jwt_identity():
+		user = select_user(g.db, get_jwt_identity())
+
+		#로그 기록
+		insert_log(g.db, user['user_id'], request.url_rule)
+
+		#관리자이면?
+		if check_admin(g.db, user['user_id']):
+				board['board_access'] = 1
+		#일반 유저이면?
+		else:
+			if board['board_access'] == 0:
+				board['board_access'] = 1
+			else:
+				board['board_access'] = 0
+	else:
+		board['board_access'] = 0
+	
 
 	result.update(
 		board = board,
@@ -49,6 +95,9 @@ def get_board(board_url):
 def board_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	#관리자 접근인지 확인
 	if not check_admin(g.db, user['user_id']):
@@ -158,50 +207,47 @@ def get_post(post_id):
 
 	#비밀글이면?
 	if private == 1:
-
 		#토큰이 유효하면?
 		if get_jwt_identity():
 			#해당 토큰으로 유저 정보를 불러오고
 			user = select_user(g.db, get_jwt_identity())
-
-			#유저 정보가 아예 없으면 잘못된 접근!
 			if user is None: abort(400)
 
-			#어드민인지 체크
-			if not check_admin(g.db, user['user_id']):
-				
-				#포스트의 작성자가 해당 토큰이랑 맞는지 비교.
-				user_check = select_author_check(g.db, post_id, user['user_id'])
+			#로그 기록
+			insert_log(g.db, user['user_id'], request.url_rule)
 
-				#작성자 본인이 맞으면?!
-				if user_check == 1:
+			#Admin 체크
+			if check_admin(g.db, user['user_id']):
+				result = get_post_func(post_id)
+			
+			#Admin 아님
+			else:
+				#이 포스트 작성자가 본인이면?
+				if select_author_check(g.db, post_id, user['user_id']):
 					result = get_post_func(post_id)
-					result.update(property = user_check)
-
+					result.update(property = 1)
 				#본인이 아니면?
 				else:
-					return jsonify(
-						result = "do not access") 
-			else:
-				result = get_post_func(post_id)
-
+					return jsonify(result = "do not access")
 		#토큰이 유효하지 않으면?
 		else:
-			return jsonify(
-				result = "do not access")
+			return jsonify(result = "do not access")
 			
 	#비밀글이 아니면?
 	else:
 		result = get_post_func(post_id)
-
+		#우선 토큰있는지 확인
 		if get_jwt_identity():
 			#해당 토큰으로 유저 정보를 불러오고
 			user = select_user(g.db, get_jwt_identity())
-			user_check = select_author_check(g.db, post_id, user['user_id'])
-			if user_check == 1:
-				result.update(property = user_check)
+			
+			#이 포스트 작성자가 본인이면?
+			if select_author_check(g.db, post_id, user['user_id']):
+				result.update(property = 1)
+			#본인이 아니면?
 			else:
 				result.update(property = 0)
+		#토큰이 없으면 본인이 작성한 글이 아닌걸로 간주.
 		else:
 			result.update(property = 0)
 
@@ -213,7 +259,7 @@ def get_post_func(post_id):
 	post = select_post(g.db, post_id)
 
 	if post is None:
-		return jsonify(reuslt = "define post")
+		return jsonify(result = "define post")
 
 	attach = select_attach(g.db, post_id)
 	comments = select_comment(g.db, post_id)
@@ -224,7 +270,7 @@ def get_post_func(post_id):
 	files = []
 	#리사이즈 된 파일은 보내줄 필요가 없기 때문에 걸러줌.
 	for file in attach:
-		if file['file_path'][0:2] != "S#":
+		if file['file_path'][0:2] != "S-":
 			files.append(file['file_path'])
 
 	result_comments = []
@@ -235,7 +281,7 @@ def get_post_func(post_id):
 
 		#댓글 날짜 형식 변경
 		comment['comment_date'] = comment['comment_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
-
+		
 		#일반 댓글 / 대댓글 판별!
 		if comment['comment_parent'] is None:
 
@@ -276,7 +322,7 @@ def get_image(page):
 		db_files = select_attach(g.db, post['post_id'])
 			
 		for file in db_files:
-			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S#":
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S-":
 				files.append(file['file_path'])
 
 		post.update(files = files)
@@ -297,6 +343,9 @@ def post_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
@@ -312,7 +361,7 @@ def post_upload():
 
 	else:
 		#첨부할 파일이 있는지 확인
-		if files is not None:
+		if files:
 			for file in files:
 				
 				#확장자 검사 후,
@@ -335,7 +384,7 @@ def post_upload():
 						delete_post(g.db, post_id)
 						return jsonify(result = "fail")
 				else:
-					return jsonify(result = "wrong_file")
+					return jsonify(result = "wrong file")
 
 		return jsonify(result = "success")
 
@@ -345,6 +394,9 @@ def post_upload():
 def post_update():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	post_id = request.form['post_id']
 
@@ -395,6 +447,9 @@ def post_delete(post_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	access = access_check_post(g.db, post_id, user['user_id'])
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
 
@@ -425,6 +480,9 @@ def post_like_up(post_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	result = insert_post_like(g.db, post_id, user['user_id'])
 
 	return jsonify(
@@ -437,6 +495,9 @@ def post_like_down(post_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
 	result = delete_post_like(g.db, post_id, user['user_id'])
 
 	return jsonify(
@@ -448,6 +509,9 @@ def post_like_down(post_id):
 def comment_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	post_id = request.form['post_id']
 	comment = request.form['comment']
@@ -468,6 +532,9 @@ def comment_upload():
 def comment_delete(comment_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
 
 	access = access_check_comment(g.db, comment_id, user['user_id'])
 
@@ -494,7 +561,7 @@ def file_name_encode(file_name):
 		path_name_S = None
 
 		if secure_filename(file_name).split('.')[-1] in IMG_EXTENSIONS:
-			path_name_S = 'S#' + path_name 
+			path_name_S = 'S-' + path_name 
 
 		return {"original": path_name, "resize_s": path_name_S}
 	

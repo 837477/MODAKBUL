@@ -6,7 +6,7 @@ from global_func import *
 from init_database import *
 
 #apps
-import main, auth, board, vote, search, admin
+import main, auth, board, vote, search, admin, analysis
 import error
 
 application = Flask(__name__, instance_relative_config=True)
@@ -33,6 +33,7 @@ def main_app(test_config = None):
 	application.register_blueprint(vote.BP)
 	application.register_blueprint(search.BP)
 	application.register_blueprint(admin.BP)
+	application.register_blueprint(analysis.BP)
 	application.register_blueprint(error.BP)
 
 @application.before_request
