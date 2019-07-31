@@ -53,10 +53,10 @@ def posts_like_rank(days):
 
 #포스트 조회수 랭킹 반환
 @BP.route('/posts_view_rank/<int:days>')
-def posts_view_rank():
+def posts_view_rank(days):
 	result = {}
 
-	view_rank = select_posts_view_rank(g.db)
+	view_rank = select_posts_view_rank(g.db, days)
 
 	result.update(
 		result = "success",
