@@ -106,21 +106,62 @@ def update_user_pw(db, user_id, new_pw):
 	return "success"
 
 #######################################################
+#태그 관리 ##############################################
+
+#태그 목록 반환
+def select_tags(db):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM tag;"
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#태그 추가
+def insert_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO tag VALUES(%s);"
+		cursor.execute(sql, (tag,))
+	db.commit()
+	return "success"
+
+#태그 중복 확인
+def check_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "SELECT COUNT(*) AS result FROM tag WHERE tag_id=%s;"
+		cursor.execute(sql, (tag,))
+		result = cursor.fetchone()
+	return result
+
+#태그 삭제
+def delete_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "DELETE FROM tag WHERE tag_id = %s;"
+		cursor.execute(sql, (tag,))
+	db.commit()
+	return "success"
+
+#태그 수정
+def update_tag(db, tag):
+	with db.cursor as cursor:
+		sql = "UPDATE tag SET tag_id = %s WHERE tag_id = %s;"
+		cursor.execute(sql, (tag,))
+	db.commit()
+	return "success"
+#######################################################
 #보드 / 포스트 관련#######################################
 
-#보드(메뉴) 추가 / 삭제 즉, 수정!
-def update_board(db, boards):
+#보드(메뉴 탭) 추가 / 수정 / 삭제 통합
+def update_boards(db, boards):
 	with db.cursor() as cursor:
-		#기존 보드 삭제
-		sql = "DELETE FROM baord;"
+		sql = "DELETE FROM board;"
 		cursor.execute(sql)
-
-		#갱신된 보드 추가
+		
 		sql = "INSERT INTO board VALUES(%s, %s, %s, %s);"
-		for board in boards:
+
+		for board in borads:
 			cursor.execute(sql, (board['board_url'], board['board_rank'], board['board_name'], board['board_access'],))
 	db.commit()
-	#이 방식은 랭크 수정의 편리를 위해 함 (자주 사용될 API가 아니기 때문)
+
 	return "success"
 
 #보드(메뉴 탭) 반환
@@ -604,7 +645,7 @@ def delete_department(db, dm_id):
 	return "success"
 
 #######################################################
-#로그 기록###############################################
+#로그 / 통계#############################################
 
 #로그 등록
 def insert_log(db, user_id, log_url):
@@ -638,7 +679,15 @@ def select_today_visitor(db):
 #오늘 방문자 수 반환
 def select_today_visitor_cnt(db):
 	with db.cursor() as cursor:
-		sql = 'SELECT COUNT(*) AS cnt FROM today_visitor;'
+		sql = 'SELECT COUNT(*) AS today_cnt FROM today_visitor;'
+		cursor.execute(sql)
+		result = cursor.fetchone()
+	return result
+
+#오늘 등록된 게시물 수 반환
+def select_today_posts_cnt(db):
+	with db.cursor() as cursor:
+		sql = "SELECT COUNT(*) AS post_cnt FROM post WHERE post_date BETWEEN CURDATE() AND NOW();"
 		cursor.execute(sql)
 		result = cursor.fetchone()
 	return result
@@ -652,54 +701,46 @@ def reset_today_visitor(db):
 
 	return "success"
 
-#매일 기록하는 방문자 수 등록
-def insert_everyday_visitor(db, today_cnt):
+#전체 방문자 수 반환
+def select_everyday_visitor_total(db):
 	with db.cursor() as cursor:
-		sql = 'INSERT INTO everyday_visitor(v_date, visitor_cnt) VALUES(CURDATE(), %s);'
-		cursor.execute(sql, (today_cnt,))
+		sql = "SELECT SUM(visitor_cnt) AS total FROM everyday_analysis;"
+		cursor.execute(sql)
+		result = cursor.fetchone()
+
+	return result
+
+#당일 통계 등록
+def insert_everyday_analysis(db, today_cnt, posts_cnt):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO everyday_analysis(v_date, visitor_cnt, posts_cnt) VALUES(CURDATE(), %s, %s);'
+		cursor.execute(sql, (today_cnt, posts_cnt,))
 	db.commit()
 
 	return True
 
-#기간내 방문자 수 목록 반환
-def select_everyday_visitor(db, days):
+#기간 내 통계 반환
+def select_everyday_analysis(db, days):
 	with db.cursor() as cursor:
-		sql = "SELECT * FROM everyday_visitor WHERE v_date BETWEEN CURDATE()-%s AND NOW();"
-		cursor.execute(sql, (days-1,))
+		sql = "SELECT * FROM everyday_analysis WHERE v_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW();"
+		cursor.execute(sql, (days,))
 		result = cursor.fetchall()
 
 	return result
 
-#전체 방문자 수 반환
-def select_everyday_visitor_total(db):
-	with db.cursor() as cursor:
-		sql = "SELECT SUM(visitor_cnt) AS total FROM everyday_visitor;"
-		cursor.execute(sql)
-		result = cursor.fetchone()
-
-	return result
-
-#기간내 등록된 글 수 반환
-def select_posts_cnt(db, days):
-	with db.cursor() as cursor:
-		sql = "SELECT COUNT(*) AS post_cnt FROM post WHERE post_date BETWEEN CURDATE()-%s AND NOW();"
-		cursor.execute(sql, (days-1,))
-		result = cursor.fetchone()
-	return result
-
 #포스트 좋아요 랭킹 반환
-def select_posts_like_rank(db):
+def select_posts_like_rank(db, days):
 	with db.cursor() as cursor:
-		sql = "SELECT A.post_id, B.post_title, A.like_cnt FROM (select post_id, count(*) AS like_cnt FROM post_like GROUP BY post_id) A LEFT JOIN post B ON A.post_id = B.post_id ORDER BY like_cnt DESC;"
-		cursor.execute(sql)
+		sql = "SELECT * FROM (SELECT A.post_id, B.post_title, A.like_cnt, B.post_date FROM (select post_id, count(*) AS like_cnt FROM post_like GROUP BY post_id) A LEFT JOIN post B ON A.post_id = B.post_id ORDER BY like_cnt DESC) C WHERE C.post_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW() LIMIT 7;"
+		cursor.execute(sql, (days,))
 		result = cursor.fetchall()
 	return result
 
 #포스트 조회수 랭킹 반환
-def select_posts_view_rank(db):
+def select_posts_view_rank(db, days):
 	with db.cursor() as cursor:
-		sql = "SELECT post_id, post_title, post_view FROM post ORDER BY post_view DESC;"
-		cursor.execute(sql)
+		sql = "SELECT post_id, post_title, post_view, post_date FROM post WHERE post_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW() ORDER BY post_view DESC;"
+		cursor.execute(sql, (days,))
 		result = cursor.fetchall()
 	return result
 #######################################################

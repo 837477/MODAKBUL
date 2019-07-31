@@ -5,8 +5,47 @@ from db_func import *
 
 BP = Blueprint('admin', __name__)
 
+ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '외부사이트', '장부', '취업', '학생회소개'}
+
+ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동_', '대외활동_공모전', '대외활동_취업', '투표', '장부_']
+#print(list(set(b) - set(a)))
 #######################################################
 #관리자 기능#############################################
+
+#게시판 추가/수정
+@BP.route('/board_upload/<string:board_url>')
+@jwt_required
+def board_upload(board_url):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	boards = request.json['boards']
+
+	#전송받은 board_url 리스트들
+	board_url_list = []
+	for board in boards:
+		board_url_list.append(board['board_url'])
+
+	#필수 board_url 체크
+	check_board = list(set(ACCESS_DENIED_BOARD) - set(board_url_list))
+
+	#만약 필수 보드가 체크보드에 남아있다면?
+	if check_board is not None:
+		return jsonify(
+			result = "fail",
+			necessary_board = check_board)
+
+	#필수 보드가 다 포함이라면?
+	else:
+		update_boards(g.db, boards)
+		return jsonify(result = success)
 
 #정적 variable 리스트 반환
 @BP.route('/get_variables')
@@ -136,6 +175,110 @@ def department_delete():
 
 	return jsonify(
 		result = result)
+
+#태그 목록 반환
+@BP.route('/get_tags')
+@jwt_required
+def get_tags():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	result = {}
+
+	tags = select_tags(g.db)
+
+	tag_list = []
+	for tag in tags:
+		if tag['tag_id'] != "ADMIN":
+			tag_list.append(tag['tag_id'])
+
+	result.update(
+		result = "success",
+		tags = tag_list)
+
+	return jsonify(result)
+
+#태그 추가
+@BP.route('/input_tag', methods=['POST'])
+@jwt_required
+def input_tag():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	tag = request.form['tag']
+
+	#해당 태그가 DB에 없으면?
+	if check_tag(g.db, tag) is None:
+		insert_tag(g.db, tag)
+		result = "success"
+	else:
+		result = "already tag"
+
+	return jsonify(result)
+
+#태그 삭제
+@BP.route('/delete_tag', methods=['POST'])
+@jwt_required
+def delete_tag():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	tag = request.form['tag']
+
+	#이 접근 불가 태그 검사
+	if tag in ACCESS_DENIED_TAG: abort(400)
+
+	if check_tag(g.db, tag) is None:
+		result = "tag is not define"
+	else:
+		result = delete_tag(g.db, tag)
+
+	return jsonify(result = result)
+
+#태그명 수정
+@BP.route('/update_tag', methods=['POST'])
+@jwt_required
+def update_tag():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	#이 접근 불가 태그 검사
+	if tag in ACCESS_DENIED_TAG: abort(400)
+
+	if check_tag(g.db, tag) is None:
+		result = "tag is not define"
+	else:
+		result = update_tag(g.db, tag)
+
+	return jsonify(result = result)
 
 #관리자 비밀번호 변경
 @BP.route('/change_pw', methods=['POST'])

@@ -7,8 +7,8 @@ from db_func import *
 BP = Blueprint('board', __name__)
 
 UPLOAD_PATH = "/static/files/"
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'hwp', 'txt', 'doc', 'xls', 'ppt', 'pptx', 'xlsx', 'docx', 'pdf', 'snd', 'otf', 'art', 'gem', 'wp5', 'wpg', 'wpd', 'wp', 'emg', 'opt', 'info', 'wmf', 'md', 'xla', 'pps', 'dot', 'lbk', 'dcx', 'qdp', 'dat', 'dbf', 'obj', 'rtf', 'dmg', 'zip', '7z', 'rar', 'jar', 'apk', 'pak', 'tar', 'tiff', 'tif', 'eml', 'pic', 'dcx', 'ntf', 'log', 'gz', 'ta.z', 'ta.gz', 'xlw', 'egg', 'ico', 'mpg', 'pif'])
-IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'hwp', 'txt', 'doc', 'xls', 'ppt', 'pptx', 'xlsx', 'docx', 'pdf', 'snd', 'otf', 'art', 'gem', 'wp5', 'wpg', 'wpd', 'wp', 'emg', 'opt', 'info', 'wmf', 'md', 'xla', 'pps', 'dot', 'lbk', 'dcx', 'qdp', 'dat', 'dbf', 'obj', 'rtf', 'dmg', 'zip', '7z', 'rar', 'jar', 'apk', 'pak', 'tar', 'tiff', 'tif', 'eml', 'pic', 'dcx', 'ntf', 'log', 'gz', 'ta.z', 'ta.gz', 'xlw', 'egg', 'ico', 'mpg', 'pif'}
+IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
 #######################################################
 #페이지 URL#############################################
@@ -88,26 +88,6 @@ def get_board(board_url):
 		board = board,
 		result = "success")
 	return jsonify(result)
-
-#게시판 추가 / 삭제 / 즉, 수정! 
-@BP.route('/board_upload', methods=['POST'])
-@jwt_required
-def board_upload():
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	#로그 기록
-	insert_log(g.db, user['user_id'], request.url_rule)
-
-	#관리자 접근인지 확인
-	if not check_admin(g.db, user['user_id']):
-		abort(400)
-
-	boards = request.json['boards']
-	
-	result = update_board(g.db, boards)
-
-	return jsonify(result = result)
 	
 #해당 게시판의 글들 불러오기(페이지네이션) (OK)
 @BP.route('/get_posts/<string:tag_string>/<int:page>')

@@ -5,8 +5,8 @@ from db_func import *
 
 BP = Blueprint('analysis', __name__)
 
-#유저 방문자 수 반환
-@BP.route('/visitor_analysis/<int:days>')
+#누적 통계 반환
+@BP.route('/today_analysis/<int:days>')
 @jwt_optional
 def visitor_analysis(days):
 	result = {}
@@ -19,7 +19,11 @@ def visitor_analysis(days):
 		color = "#C30E2E"
 
 	#기간 내 방문자 수 목록 반환
-	visitor_cnt_list = select_everyday_visitor(g.db, days)
+	everyday_analysis = select_everyday_analysis(g.db, days)
+
+	#오늘 방문자 수 반환
+	today_visitor = select_today_visitor_cnt(g.db)
+	today = today_visitor['today_cnt']
 
 	#전체 방문자 수 반환
 	total_visitor = select_everyday_visitor_total(g.db)
@@ -27,31 +31,19 @@ def visitor_analysis(days):
 
 	result.update(
 			user_color = color,
-			visitor_cnt_list = visitor_cnt_list,
+			everyday_analysis = everyday_analysis,
+			today_visitor = today,
 			total_visitor = total,
 			result = "success")
 
 	return jsonify(result)
 
-#등록된 글 수 반환
-@BP.route('/posts_analysis/<int:days>')
-def posts_analysis(days):
-	result = {}
-
-	posts_cnt = select_posts_cnt(g.db, days)
-
-	result.update(
-		result = "success",
-		posts_cnt = posts_cnt['post_cnt'])
-
-	return jsonify(result)
-
 #포스트 좋아요 랭킹 반환
-@BP.route('/posts_like_rank')
-def posts_like_rank():
+@BP.route('/posts_like_rank/<int:days>')
+def posts_like_rank(days):
 	result = {}
 
-	like_rank = select_posts_like_rank(g.db)
+	like_rank = select_posts_like_rank(g.db, days)
 
 	result.update(
 		result = "success",
@@ -60,7 +52,7 @@ def posts_like_rank():
 	return jsonify(result)
 
 #포스트 조회수 랭킹 반환
-@BP.route('/posts_view_rank')
+@BP.route('/posts_view_rank/<int:days>')
 def posts_view_rank():
 	result = {}
 

@@ -7,7 +7,7 @@ import json
 
 BP = Blueprint('vote', __name__)
 UPLOAD_PATH = "/static/files/"
-IMG_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
+IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 #######################################################
 #페이지 URL#############################################
 
@@ -129,7 +129,7 @@ def vote_answer():
 
 	return jsonify(result = result)
 
-#투표 글들 불러오기(페이지네이션)
+#투표 글들 불러오기
 @BP.route('/get_votes')
 def get_votes():
 	votes = select_votes(g.db)
