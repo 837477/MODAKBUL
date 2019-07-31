@@ -280,6 +280,22 @@ def update_tag():
 
 	return jsonify(result = result)
 
+#로그 검색
+@BP.route('/search_log', methods=['POST'])
+@jwt_required
+def search_log():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	
+
 #관리자 비밀번호 변경
 @BP.route('/change_pw', methods=['POST'])
 @jwt_required
