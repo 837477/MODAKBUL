@@ -106,48 +106,6 @@ def update_user_pw(db, user_id, new_pw):
 	return "success"
 
 #######################################################
-#태그 관리 ##############################################
-
-#태그 목록 반환
-def select_tags(db):
-	with db.cursor() as cursor:
-		sql = "SELECT * FROM tag;"
-		cursor.execute(sql)
-		result = cursor.fetchall()
-	return result
-
-#태그 추가
-def insert_tag(db, tag):
-	with db.cursor() as cursor:
-		sql = "INSERT INTO tag VALUES(%s);"
-		cursor.execute(sql, (tag,))
-	db.commit()
-	return "success"
-
-#태그 중복 확인
-def check_tag(db, tag):
-	with db.cursor() as cursor:
-		sql = "SELECT COUNT(*) AS result FROM tag WHERE tag_id=%s;"
-		cursor.execute(sql, (tag,))
-		result = cursor.fetchone()
-	return result
-
-#태그 삭제
-def delete_tag(db, tag):
-	with db.cursor() as cursor:
-		sql = "DELETE FROM tag WHERE tag_id = %s;"
-		cursor.execute(sql, (tag,))
-	db.commit()
-	return "success"
-
-#태그 수정
-def update_tag(db, tag):
-	with db.cursor as cursor:
-		sql = "UPDATE tag SET tag_id = %s WHERE tag_id = %s;"
-		cursor.execute(sql, (tag,))
-	db.commit()
-	return "success"
-#######################################################
 #보드 / 포스트 관련#######################################
 
 #보드(메뉴 탭) 추가 / 수정 / 삭제 통합
@@ -642,6 +600,53 @@ def delete_department(db, dm_id):
 		cursor.execute(sql, (dm_id,))
 	db.commit()
 
+	return "success"
+
+#로그 검색
+def select_log(db, user_id, log_url):
+	print("working..")
+
+#######################################################
+#태그 관리 ##############################################
+
+#태그 목록 반환
+def select_tags(db):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM tag;"
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#태그 추가
+def insert_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO tag VALUES(%s);"
+		cursor.execute(sql, (tag,))
+	db.commit()
+	return "success"
+
+#태그 중복 확인
+def check_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "SELECT COUNT(*) AS result FROM tag WHERE tag_id=%s;"
+		cursor.execute(sql, (tag,))
+		result = cursor.fetchone()
+	return result
+
+#태그 삭제
+def delete_tag(db, tag):
+	with db.cursor() as cursor:
+		sql = "DELETE FROM tag WHERE tag_id = %s;"
+		cursor.execute(sql, (tag,))
+	db.commit()
+	return "success"
+
+#태그 수정
+def update_tag(db, tag):
+	with db.cursor as cursor:
+		sql = "UPDATE tag SET tag_id = %s WHERE tag_id = %s;"
+		cursor.execute(sql, (tag,))
+	db.commit()
 	return "success"
 
 #######################################################
