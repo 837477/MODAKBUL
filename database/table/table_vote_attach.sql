@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS vote_attach(
-vote_id INT NOT NULL,
-vote_file_path VARCHAR(500) NOT NULL,
-PRIMARY KEY(vote_id, vote_file_path),
-FOREIGN KEY(vote_id) REFERENCES vote(vote_id) ON DELETE CASCADE ON UPDATE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

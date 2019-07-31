@@ -7,7 +7,7 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from tzlocal import get_localzone
 from init_database import *
-
+from db_func import *
 import crawl_run
 
 # BackgroundScheduler Initialize
@@ -15,15 +15,17 @@ def schedule_init():
 	t_zone = get_localzone()
 	scheduler = BackgroundScheduler()
 	#scheduler.add_job(func = test_bg, trigger = "interval", seconds = 1, timezone = t_zone)
-	scheduler.add_job(func = modakbul_crawler, trigger = "interval", days = 1, timezone = t_zone)
+	scheduler.add_job(modakbul_crawler, 'cron', hour = 0, minute = 30, timezone = t_zone)
+	scheduler.add_job(visitor_manage, 'cron', hour = 23, minute = 59, timezone = t_zone)
 	# weeks, days, hours, minutes, seconds
 	# start_date='2010-10-10 09:30', end_date='2014-06-15 11:00'
 	scheduler.start()
 	atexit.register(lambda: scheduler.shutdown())
 
 ########## 백그라운드 프로세스 ##########
+#공모전/취업 크롤러
 def modakbul_crawler():
-	db = db = connect(host=DB_IP, user=DB_ID, password=DB_PW, db='modakbul', charset='utf8mb4', cursorclass=cursors.DictCursor)
+	db = connect(host=DB_IP, user=DB_ID, password=DB_PW, db='modakbul', charset='utf8mb4', cursorclass=cursors.DictCursor)
 
 	#기존 공모전/취업글 삭제
 	c_delete_post(db)
@@ -41,71 +43,17 @@ def modakbul_crawler():
 	
 	db.close()
 
-#DB 이용 함수###########################################
-#크롤러 사이트 포스트들 업로드 전용 함수
-def c_insert_post(db, user_id, title, content, date, tags, url, img_url):
-	with db.cursor() as cursor:
-		sql = "INSERT INTO post (user_id, post_title, post_content, post_date) VALUES (%s, %s, %s, %s);"
-		cursor.execute(sql, (user_id, title, content, date,))
-		
-		sql = "SELECT MAX(post_id) AS post_id FROM post"
-		cursor.execute(sql)
+#방문자 수 관리
+def visitor_manage():
+	db = connect(host=DB_IP, user=DB_ID, password=DB_PW, db='modakbul', charset='utf8mb4', cursorclass=cursors.DictCursor)
 
-		post_id = cursor.fetchone()
+	#오늘 방문자 수를 가져온다.
+	today_cnt = select_today_visitor_cnt(g.db)
 
-		tags.append('대외활동')
+	#매일 접속자 파악 테이블에 추가한다.
+	result = insert_everyday_visitor(g.db, today_cnt)
 
-		for tag in tags:
-			sql = 'INSERT INTO post_tag (post_id, tag_id) VALUES (%s, %s);'
-			cursor.execute(sql, (post_id['post_id'], tag,))
+	if result:
+		#정상 처리가 되었으면 하루 접속자 테이블을 리셋한다.
+		reset_today_visitor(g.db)
 
-		sql = "INSERT INTO post_url (post_id, post_url_link, post_url_img) VALUES (%s, %s, %s);"
-
-		cursor.execute(sql, (post_id['post_id'], url, img_url,))
-
-	db.commit()
-
-#크롤러 사이트 포스트들 전체 삭제 전용 함수
-def c_delete_post(db):
-	target_posts = c_select_tag_in_posts(db, ['외부사이트'])
-	
-	with db.cursor() as cursor:
-		sql = 'DELETE FROM post WHERE post_id = %s;'
-		
-		for post in target_posts:
-			cursor.execute(sql, (post['post_id'],))
-
-		db.commit()
-
-	return "success"
-
-#외부사이트 태그가 들어가있는 포스트 아이디들 반환해주는 함수
-def c_select_tag_in_posts(db, tag_list):	
-	with db.cursor() as cursor:
-		sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
-		add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
-		i = 2
-		result_sql = ""
-
-		for tag in tag_list:
-			if tag == tag_list[0]:
-				result_sql +=(sql %(tag))
-
-			elif tag != tag_list[len(tag_list)-1]:
-				result_sql +=(add_sql %(tag, i))
-				i +=1
-				
-			else:
-				result_sql +=(add_sql %(tag, i))
-				i +=1
-				result_sql += "ON P1.post_id = P2.post_id "
-				for i in range(3, i):
-					temp = "AND P1.post_id = P%s.post_id "
-					temp = (temp %(i))
-					result_sql += temp
-				result_sql += ';'
-		
-		cursor.execute(result_sql)
-		result = cursor.fetchall()
-
-	return result

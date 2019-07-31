@@ -306,7 +306,7 @@ def get_post_func(post_id):
 		comment = result_comments,
 		result = "success")
 
-	return result
+	return jsonify(result)
 
 #갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
 @BP.route('/get_image/<int:page>')

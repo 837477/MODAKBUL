@@ -192,6 +192,7 @@ def select_posts_page(db, tag_in_post_id, page):
 		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
+
 	return result
 #태그가 속해있는 글들(ALL) 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
@@ -359,11 +360,11 @@ def delete_comment(db, comment_id):
 #투표 관련###############################################
 
 #투표 등록 (관리자)
-def insert_vote(db, vote):
+def insert_vote(db, vote, file):
 	with db.cursor() as cursor:
 		#투표 등록 쿼리문
-		sql = 'INSERT INTO vote(user_id, vote_title, vote_content, end_date) VALUES(%s, %s, %s, %s);'
-		cursor.execute(sql, (vote['user_id'], vote['title'], vote['content'], vote['end_date'],))
+		sql = 'INSERT INTO vote(user_id, vote_title, vote_content, end_date, vote_file_path) VALUES(%s, %s, %s, %s, %s);'
+		cursor.execute(sql, (vote['user_id'], vote['title'], vote['content'], vote['end_date'], file,))
 
 		#등록된 투표 아이디 가져오기.
 		sql = 'SELECT MAX(vote_id) AS vote_id FROM vote WHERE user_id = %s;'
@@ -392,7 +393,7 @@ def insert_vote(db, vote):
 
 	db.commit()
 
-	return vote_id
+	return "success"
 
 #투표 참여 (사용자)
 def insert_vote_user_answer(db, user_answer):
@@ -425,7 +426,7 @@ def select_votes(db):
 #해당 투표글 반환
 def select_vote(db, vote_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.vote_id = %s'
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt, vote_file_path FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.vote_id = %s'
 		cursor.execute(sql, (vote_id,))
 		result = cursor.fetchone()
 
@@ -445,22 +446,6 @@ def select_vote_select(db, que_id):
 		cursor.execute(sql, (que_id,))
 		result = cursor.fetchall()
 
-	return result
-
-#투표 파일 등록
-def insert_vote_attach(db, vote_id, file):
-	with db.cursor() as cursor:
-		sql = "INSERT INTO vote_attach (vote_id, vote_file_path) VALUES (%s, %s);"
-		cursor.execute(sql, (vote_id, file,))
-	db.commit()
-	return "success"
-
-#투표 파일 반환
-def select_vote_attach(db, vote_id):
-	with db.cursor() as cursor:
-		sql = 'SELECT vote_file_path FROM vote_attach WHERE vote_id = %s;'
-		cursor.execute(sql, (vote_id,))
-		result = cursor.fetchall()
 	return result
 
 #투표 수정 (마감 기한만 가능)
@@ -629,8 +614,162 @@ def insert_log(db, user_id, log_url):
 	db.commit()
 	return "success"
 
+#오늘 방문자 등록(IP)
+def insert_today_visitor(db, ip_adress):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO today_visitor VALUES(%s);'
+		cursor.execute(sql, (ip_adress,))
+	db.commit()
+	return "success"
+
+#오늘 방문자 반환(IP 리스트)
+def select_today_visitor(db):
+	result = []
+	with db.cursor() as cursor:
+		sql = 'SELECT * FROM today_visitor;'
+		cursor.execute(sql)
+		today = cursor.fetchall()
+
+	for visitor in today:
+		result.append(visitor['ip_adress'])
+
+	return result
+
+#오늘 방문자 수 반환
+def select_today_visitor_cnt(db):
+	with db.cursor() as cursor:
+		sql = 'SELECT COUNT(*) AS cnt FROM today_visitor;'
+		cursor.execute(sql)
+		result = cursor.fetchone()
+	return result
+
+#오늘 방문자 리셋
+def reset_today_visitor(db):
+	with db.cursor() as cursor:
+		sql = 'DELETE * FROM today_visitor;'
+		cursor.execute(sql)
+	db.commit()
+
+	return "success"
+
+#매일 기록하는 방문자 수 등록
+def insert_everyday_visitor(db, today_cnt):
+	with db.cursor() as cursor:
+		sql = 'INSERT INTO everyday_visitor(v_date, visitor_cnt) VALUES(CURDATE(), %s);'
+		cursor.execute(sql, (today_cnt,))
+	db.commit()
+
+	return True
+
+#기간내 방문자 수 목록 반환
+def select_everyday_visitor(db, days):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM everyday_visitor WHERE v_date BETWEEN CURDATE()-%s AND NOW();"
+		cursor.execute(sql, (days-1,))
+		result = cursor.fetchall()
+
+	return result
+
+#전체 방문자 수 반환
+def select_everyday_visitor_total(db):
+	with db.cursor() as cursor:
+		sql = "SELECT SUM(visitor_cnt) AS total FROM everyday_visitor;"
+		cursor.execute(sql)
+		result = cursor.fetchone()
+
+	return result
+
+#기간내 등록된 글 수 반환
+def select_posts_cnt(db, days):
+	with db.cursor() as cursor:
+		sql = "SELECT COUNT(*) AS post_cnt FROM post WHERE post_date BETWEEN CURDATE()-%s AND NOW();"
+		cursor.execute(sql, (days-1,))
+		result = cursor.fetchone()
+	return result
+
+#포스트 좋아요 랭킹 반환
+def select_posts_like_rank(db):
+	with db.cursor() as cursor:
+		sql = "SELECT A.post_id, B.post_title, A.like_cnt FROM (select post_id, count(*) AS like_cnt FROM post_like GROUP BY post_id) A LEFT JOIN post B ON A.post_id = B.post_id ORDER BY like_cnt DESC;"
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
+
+#포스트 조회수 랭킹 반환
+def select_posts_view_rank(db):
+	with db.cursor() as cursor:
+		sql = "SELECT post_id, post_title, post_view FROM post ORDER BY post_view DESC;"
+		cursor.execute(sql)
+		result = cursor.fetchall()
+	return result
 #######################################################
-#로그 기록###############################################
+#DB 클롤러 전용##########################################
 
+#크롤러 사이트 포스트들 업로드 전용 함수
+def c_insert_post(db, user_id, title, content, date, tags, url, img_url):
+	with db.cursor() as cursor:
+		sql = "INSERT INTO post (user_id, post_title, post_content, post_date) VALUES (%s, %s, %s, %s);"
+		cursor.execute(sql, (user_id, title, content, date,))
+		
+		sql = "SELECT MAX(post_id) AS post_id FROM post"
+		cursor.execute(sql)
 
+		post_id = cursor.fetchone()
+
+		tags.append('대외활동')
+
+		for tag in tags:
+			sql = 'INSERT INTO post_tag (post_id, tag_id) VALUES (%s, %s);'
+			cursor.execute(sql, (post_id['post_id'], tag,))
+
+		sql = "INSERT INTO post_url (post_id, post_url_link, post_url_img) VALUES (%s, %s, %s);"
+
+		cursor.execute(sql, (post_id['post_id'], url, img_url,))
+
+	db.commit()
+
+#크롤러 사이트 포스트들 전체 삭제 전용 함수
+def c_delete_post(db):
+	target_posts = c_select_tag_in_posts(db, ['외부사이트'])
+	
+	with db.cursor() as cursor:
+		sql = 'DELETE FROM post WHERE post_id = %s;'
+		
+		for post in target_posts:
+			cursor.execute(sql, (post['post_id'],))
+
+		db.commit()
+
+	return "success"
+
+#외부사이트 태그가 들어가있는 포스트 아이디들 반환해주는 함수
+def c_select_tag_in_posts(db, tag_list):	
+	with db.cursor() as cursor:
+		sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
+		add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
+		i = 2
+		result_sql = ""
+
+		for tag in tag_list:
+			if tag == tag_list[0]:
+				result_sql +=(sql %(tag))
+
+			elif tag != tag_list[len(tag_list)-1]:
+				result_sql +=(add_sql %(tag, i))
+				i +=1
+				
+			else:
+				result_sql +=(add_sql %(tag, i))
+				i +=1
+				result_sql += "ON P1.post_id = P2.post_id "
+				for i in range(3, i):
+					temp = "AND P1.post_id = P%s.post_id "
+					temp = (temp %(i))
+					result_sql += temp
+				result_sql += ';'
+		
+		cursor.execute(result_sql)
+		result = cursor.fetchall()
+
+	return result
 

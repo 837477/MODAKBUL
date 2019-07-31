@@ -26,7 +26,7 @@ def vote_upload():
 
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
-		abort(400)
+		return jsonify(result = "you are not admin")
 
 	#보트 정보 불러오기 + json으로 변환 (아래와 같은 형식)
 	vote_str = request.form['vote']
@@ -38,8 +38,7 @@ def vote_upload():
 	#유저 아이디 추가.
 	vote_json.update(user_id = user['user_id'])
 
-	vote_id = insert_vote(g.db, vote_json)
-
+	#파일이 있냐?!
 	if file:
 		file = file[0]
 
@@ -47,21 +46,22 @@ def vote_upload():
 		file_check = file_name_encode(file.filename)
 
 		if file_check is not None:
-			#DB에 파일 추가!
-			result = insert_vote_attach(g.db, vote_id, file_check)
+			#DB에 투표글 추가!
+			result = insert_vote(g.db, vote_json, file_check)
 
 			if result == "success":
 				file.save('.' + UPLOAD_PATH + file_check)
 			else:
-				delete_vote(g.db, vote_id, user['user_id'])
 				return jsonify(result = "fail")
 		else:
 			return jsonify(result = "wrong file")	
 
-	if vote_id is None:
-		return jsonify(result = "fail")
+	#파일이 없다!
 	else:
-		return jsonify(result = "success")
+		result = insert_vote(g.db, vote_json, None)
+
+	return jsonify(
+		result=result)
 
 	'''
 	vote_json = {
@@ -132,8 +132,6 @@ def vote_answer():
 #투표 글들 불러오기(페이지네이션)
 @BP.route('/get_votes')
 def get_votes():
-	result = {}
-
 	votes = select_votes(g.db)
 
 	for vote in votes:
@@ -154,7 +152,6 @@ def get_vote(vote_id):
 		return jsonify(reuslt = "define vote")
 
 	ques = select_vote_que(g.db, vote_id)
-	attach = select_vote_attach(g.db, vote_id)
 
 	#프론트의 요구로 날짜 형식 변형
 	vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
@@ -168,10 +165,9 @@ def get_vote(vote_id):
 
 	result.update(
 		vote = vote,
-		file = attach,
 		result = "success")
 
-	return result
+	return jsonify(result)
 
 #투표 마감기한 수정
 @BP.route('/vote_update', methods=['POST'])

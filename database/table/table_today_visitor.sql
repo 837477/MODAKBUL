@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS today_visitor(
+ip_adress VARCHAR(20) NOT NULL,
+PRIMARY KEY (ip_adress)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
