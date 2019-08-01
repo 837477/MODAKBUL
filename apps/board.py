@@ -28,7 +28,8 @@ def get_boards():
 	#토큰이 있으면?
 	if get_jwt_identity():
 		user = select_user(g.db, get_jwt_identity())
-
+		if user is None: abort(400)
+		
 		#로그 기록
 		insert_log(g.db, user['user_id'], request.url_rule)
 
@@ -64,12 +65,19 @@ def get_board(board_url):
 	if board is None:
 		return jsonify(reuslt = "board is empty")
 
+	print("\n\n\n")
+	print(get_jwt_identity())
+
 	#토큰이 있으면?
 	if get_jwt_identity():
 		user = select_user(g.db, get_jwt_identity())
+		if user is None: abort(400)
 
 		#로그 기록
 		insert_log(g.db, user['user_id'], request.url_rule)
+
+		print("\n\n\n")
+		print(user)
 
 		#관리자이면?
 		if check_admin(g.db, user['user_id']):
@@ -184,9 +192,10 @@ def get_posts_list(tag_string):
 @jwt_optional #우선 토큰이 유효하든 안하든 받고 본다.
 def get_post(post_id):
 	private = select_private_check(g.db, post_id)
-
+	result = {}
 	#비밀글이면?
 	if private == 1:
+
 		#토큰이 유효하면?
 		if get_jwt_identity():
 			#해당 토큰으로 유저 정보를 불러오고
@@ -198,13 +207,13 @@ def get_post(post_id):
 
 			#Admin 체크
 			if check_admin(g.db, user['user_id']):
-				result = get_post_func(post_id)
+				post = get_post_func(post_id)
 			
 			#Admin 아님
 			else:
 				#이 포스트 작성자가 본인이면?
 				if select_author_check(g.db, post_id, user['user_id']):
-					result = get_post_func(post_id)
+					post = get_post_func(post_id)
 					result.update(property = 1)
 				#본인이 아니면?
 				else:
@@ -215,9 +224,10 @@ def get_post(post_id):
 			
 	#비밀글이 아니면?
 	else:
-		result = get_post_func(post_id)
+		post = get_post_func(post_id)
 		#우선 토큰있는지 확인
 		if get_jwt_identity():
+
 			#해당 토큰으로 유저 정보를 불러오고
 			user = select_user(g.db, get_jwt_identity())
 			
@@ -230,6 +240,11 @@ def get_post(post_id):
 		#토큰이 없으면 본인이 작성한 글이 아닌걸로 간주.
 		else:
 			result.update(property = 0)
+
+	result.update(post = post)
+
+	print("\n\n\n\n\n")
+	print(result)
 
 	return jsonify(result)
 	
@@ -286,7 +301,7 @@ def get_post_func(post_id):
 		comment = result_comments,
 		result = "success")
 
-	return jsonify(result)
+	return result
 
 #갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
 @BP.route('/get_image/<int:page>')

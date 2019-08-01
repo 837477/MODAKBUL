@@ -294,7 +294,19 @@ def search_log():
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
+	result = {}
 	
+	input_str = request.form['input_str']
+
+	topic_list = input_str.split('_')
+
+	result_log = select_log(g.db, topic_list)
+
+	result.update(
+		result = "success",
+		result_log = result_log)
+
+	return jsonify(result)
 
 #관리자 비밀번호 변경
 @BP.route('/change_pw', methods=['POST'])

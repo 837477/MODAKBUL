@@ -408,15 +408,24 @@ def insert_vote_user_answer(db, user_answer):
 					cursor.execute(sql, (user_answer['vote_id'], answer['que_id'], ans, user_answer['user_id'], None,))
 			#단답형이라면?
 			else:
-				cursor.execute(sql, (user_answer['vote_id'], answer['que_id'], ans, user_answer['user_id'], answer['ans'],))
+				cursor.execute(sql, (user_answer['vote_id'], answer['que_id'], None, user_answer['user_id'], answer['ans'],))
 	db.commit()
 
 	return "success"
 
-#투표 글목록 반환
+#투표 글목록 반환 (진행중)
 def select_votes(db):
 	with db.cursor() as cursor:
 		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date > NOW() ORDER BY A.end_date DESC;'
+		cursor.execute(sql)
+		result = cursor.fetchall()
+
+	return result
+
+#투표 글목록 반환 (완료)
+def select_votes_finish(db):
+	with db.cursor() as cursor:
+		sql = 'SELECT A.vote_id, A.user_id AS vote_author, vote_title, vote_content, start_date, end_date, IFNULL(B.join_cnt, 0) AS join_cnt FROM vote A LEFT JOIN (SELECT vote_id, COUNT(DISTINCT user_id) AS join_cnt FROM vote_user_answer GROUP BY vote_id) B ON A.vote_id = B.vote_id WHERE A.end_date < NOW() ORDER BY A.end_date DESC;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 
@@ -602,10 +611,6 @@ def delete_department(db, dm_id):
 
 	return "success"
 
-#로그 검색
-def select_log(db, user_id, log_url):
-	print("working..")
-
 #######################################################
 #태그 관리 ##############################################
 
@@ -659,6 +664,26 @@ def insert_log(db, user_id, log_url):
 		cursor.execute(sql, (user_id, log_url,))
 	db.commit()
 	return "success"
+
+#로그 검색
+def select_log(db, topic_list):
+	sql = "SELECT * FROM log WHERE "
+
+	for  topic in topic_list:
+		add_sql = 'CONCAT(user_id, log_url, log_time) REGEXP '
+		sql += (add_sql + '"' + topic + '"')
+
+		if topic != topic_list[-1]:
+			sql += ' AND '
+		else:
+			sql += ';'
+
+	cursor.execute(sql)
+	result = cursor.fetchall()
+
+	return result
+
+
 
 #오늘 방문자 등록(IP)
 def insert_today_visitor(db, ip_adress):
@@ -746,6 +771,23 @@ def select_posts_view_rank(db, days):
 	with db.cursor() as cursor:
 		sql = "SELECT post_id, post_title, post_view, post_date FROM post WHERE post_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW() ORDER BY post_view DESC;"
 		cursor.execute(sql, (days,))
+		result = cursor.fetchall()
+	return result
+
+#투표 선택지의 점유율
+def select_vote_select_status(db, que_id):
+	with db.cursor() as cursor:
+		sql = "SELECT A.*, IFNULL(B.cnt, 0) AS select_cnt FROM vote_select A LEFT JOIN (SELECT IFNULL(select_id, '단답형') AS select_id, count(select_id) AS cnt FROM vote_user_answer GROUP BY select_id) B ON A.select_id = B.select_id WHERE A.que_id = %s;"
+		cursor.execute(sql, (que_id,))
+		result = cursor.fetchall()
+
+	return result
+
+#투표 질문의 선택지 유저 리스트
+def select_vote_select_status_user(db, que_id):
+	with db.cursor() as cursor:
+		sql = "SELECT A.que_id, IFNULL(A.select_id, '단답형') AS select_id, A.user_id, IFNULL(A.answer, '선택형') AS answer, B.user_name, B.user_color FROM vote_user_answer A LEFT JOIN (SELECT user_id, user_name, user_color FROM user) B ON A.user_id = B.user_id WHERE que_id = %s;"
+		cursor.execute(sql, (que_id,))
 		result = cursor.fetchall()
 	return result
 #######################################################

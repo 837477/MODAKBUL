@@ -110,7 +110,7 @@ def vote_answer():
 
 			{"que_id": 2,
 			"que_type": 1,
-			"ans": [1]},
+			"ans": [3]},
 
 			{"que_id": 3,
 			"que_type": 2,

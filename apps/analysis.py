@@ -64,3 +64,84 @@ def posts_view_rank(days):
 
 	return jsonify(result)
 
+#투표 현황(진행중 / 완료) 반환
+@BP.route('/get_vote_status')
+def get_vote_status():
+	result = {}
+
+	undone_vote = select_votes(g.db)
+	done_vote = select_votes_finish(g.db)
+
+	for vote in undone_vote:
+		#프론트의 요구로 날짜 형식 변형
+		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
+
+	for vote in done_vote:
+		#프론트의 요구로 날짜 형식 변형
+		vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+		vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
+
+	result.update(
+		result = "success",
+		undone_vote = undone_vote,
+		done_vote = done_vote)
+
+	return jsonify(result)
+
+#해당 투표의 선택지 점유율
+@BP.route('/get_vote_select_status/<int:vote_id>')
+def get_vote_select_status(vote_id):
+	result = {}
+	vote = select_vote(g.db, vote_id)
+
+	if vote is None:
+		return jsonify(reuslt = "define vote")
+
+	ques = select_vote_que(g.db, vote_id)
+
+	#프론트의 요구로 날짜 형식 변형
+	vote['start_date'] = vote['start_date'].strftime("%Y년 %m월 %d일")
+	vote['end_date'] = vote['end_date'].strftime("%Y년 %m월 %d일")
+
+	for que in ques:
+		select = select_vote_select_status(g.db, que['que_id'])
+		que.update(select = select)
+
+	vote.update(que_list = ques)
+
+	result.update(
+		vote = vote,
+		result = "success")
+
+	return jsonify(result)
+
+#해당 질문의 선택지 현황 (유저 목록 반환)
+@BP.route('/get_vote_select_status_user/<int:que_id>')
+@jwt_required
+def get_vote_select_status_user(que_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		return jsonify(result = "you are not admin")
+
+	result = {}
+
+	select_user_list = select_vote_select_status_user(g.db, que_id)
+
+	result.update(
+		result = "success",
+		select_user_list = select_user_list)
+
+	return jsonify(result = result)
+	
+
+	
+
+	
+
