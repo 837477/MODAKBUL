@@ -15,7 +15,7 @@ def sign_in():
 #######################################################
 #회원 기능###############################################
 
-#로그인 및 회원가입(토큰발행)
+#로그인 및 회원가입(토큰발행) (OK)
 @BP.route('/sign_in_up', methods=['POST'])
 def login_modakbul():
 	USER_ID = request.form['id']
@@ -26,7 +26,7 @@ def login_modakbul():
 	if user is None:
 		sejong_api_result = dosejong_api(USER_ID, USER_PW)
 		if not sejong_api_result['result']:
-			sejong_api_result = sejong_api(USER_ID, USER_PW)
+			sejong_api_result = sejong_apßi(USER_ID, USER_PW)
 			
 		if not sejong_api_result['result']:
 			return jsonify(result = "You are not sejong")
@@ -51,7 +51,29 @@ def login_modakbul():
 			access_token = create_access_token(identity = USER_ID, expires_delta=False)
 			)
 	else:
-		return jsonify(result = "incorrect password")
+		#비번이 틀리면 우선 한번 더 sejong API 확인한다.
+		sejong_api_result = dosejong_api(USER_ID, USER_PW)
+		if not sejong_api_result['result']:
+			sejong_api_result = sejong_api(USER_ID, USER_PW)
+			
+		if not sejong_api_result['result']:
+			return jsonify(result = "You are not sejong")
+		else:
+			#sejong API로 로그인에 성공하면, 세종 포털 비번변경으로 인한 로그인 실패.
+			#DB비밀번호를 갱신시킨다.
+			user = select_user(g.db, USER_ID)
+			update_user_pw(g.db, user['user_id'], generate_password_hash(USER_PW))
+
+			#블랙리스트 인지 확인
+			user_tag = select_user_tag(g.db, user['user_id'])
+			if "블랙리스트" in user_tag:
+				return jsonify(result = "blacklist")
+
+			if check_password_hash(user['pw'], USER_PW):
+				return jsonify(
+					result = "success",
+					access_token = create_access_token(identity = USER_ID, expires_delta=False)
+					)
 
 #회원정보 반환 (OK)
 @BP.route('/get_userinfo')
@@ -93,7 +115,8 @@ def user_color():
 
 	new_color = request.form['new_color']
 	result = change_user_color(g.db, user['user_id'], new_color)
-	return jsonify(result = result)
+	return jsonify(
+		result = result)
 
 #######################################################
 #관리자 권한#############################################

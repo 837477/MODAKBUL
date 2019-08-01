@@ -2,13 +2,14 @@ from flask import *
 from werkzeug import *
 from flask_jwt_extended import *
 from db_func import *
+import re
 
 BP = Blueprint('admin', __name__)
 
 ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '외부사이트', '장부', '취업', '학생회소개'}
 
 ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동_', '대외활동_공모전', '대외활동_취업', '투표', '장부_']
-#print(list(set(b) - set(a)))
+
 #######################################################
 #관리자 기능#############################################
 
@@ -28,9 +29,21 @@ def board_upload(board_url):
 
 	boards = request.json['boards']
 
+	#욕 필터
+	if check_word_filter(boards['board_url']):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(boards['board_name']):
+		return jsonify(result = "unavailable word")
+
 	#전송받은 board_url 리스트들
 	board_url_list = []
 	for board in boards:
+		check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', board['board_url'])
+
+		#길이가 달라졌다?! = 특수문자 들어간거임
+		if len(board['board_url']) != len(check):
+			return jsonify(result = "do not use special characters")
+
 		board_url_list.append(board['board_url'])
 
 	#필수 board_url 체크
@@ -93,6 +106,12 @@ def variable_upload():
 	key = request.form['key']
 	value = request.form['value']
 
+	#욕 필터
+	if check_word_filter(key):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(value):
+		return jsonify(result = "unavailable word")
+
 	result = insert_variable(g.db, key, value)
 
 	return jsonify(
@@ -149,6 +168,14 @@ def department_upload():
 	dm_name = request.form['dm_name']
 	dm_chairman = request.form['dm_chairman']
 	dm_intro = request.form['dm_intro']
+
+	#욕 필터
+	if check_word_filter(dm_name):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(dm_chairman):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(dm_intro):
+		return jsonify(result = "unavailable word")
 
 	result = insert_department(g.db, dm_name, dm_chairman, dm_intro)
 
@@ -221,6 +248,16 @@ def input_tag():
 
 	tag = request.form['tag']
 
+	#욕 필터#
+	if check_word_filter(tag):
+		return jsonify(result = "unavailable word")
+
+	check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', tag)
+
+	#길이가 달라졌다?! = 특수문자 들어간거임
+	if len(tag) != len(cehck):
+		return jsonify(result = "do not use special characters")
+
 	#해당 태그가 DB에 없으면?
 	if check_tag(g.db, tag) is None:
 		insert_tag(g.db, tag)
@@ -269,6 +306,18 @@ def update_tag():
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
+
+	tag = request.form['tag']
+
+	#욕 필터
+	if check_word_filter(tag):
+		return jsonify(result = "unavailable word")
+
+	check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', tag)
+
+	#길이가 달라졌다?! = 특수문자 들어간거임
+	if len(tag) != len(cehck):
+		return jsonify(result = "do not use special characters")
 
 	#이 접근 불가 태그 검사
 	if tag in ACCESS_DENIED_TAG: abort(400)

@@ -18,7 +18,7 @@ def visitor_analysis(days):
 	else:
 		color = "#C30E2E"
 
-	#기간 내 방문자 수 목록 반환
+	#기간 내 통 목록 반환
 	everyday_analysis = select_everyday_analysis(g.db, days)
 
 	#오늘 방문자 수 반환
@@ -86,7 +86,7 @@ def get_vote_status():
 		result = "success",
 		undone_vote = undone_vote,
 		done_vote = done_vote)
-
+ 
 	return jsonify(result)
 
 #해당 투표의 선택지 점유율
@@ -138,7 +138,7 @@ def get_vote_select_status_user(que_id):
 		result = "success",
 		select_user_list = select_user_list)
 
-	return jsonify(result = result)
+	return jsonify(result)
 	
 
 	

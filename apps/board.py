@@ -3,6 +3,7 @@ from werkzeug import *
 from flask_jwt_extended import *
 from PIL import Image
 from db_func import *
+from word_filter import *
 
 BP = Blueprint('board', __name__)
 
@@ -16,9 +17,9 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
 
 #######################################################
-#포스트 반환#############################################
+#보드 / 포스트 반환#############################################
 
-#게시판 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
+#보드(메뉴) 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
 @BP.route('/get_boards')
 @jwt_optional
 def get_boards():
@@ -29,7 +30,7 @@ def get_boards():
 	if get_jwt_identity():
 		user = select_user(g.db, get_jwt_identity())
 		if user is None: abort(400)
-		
+
 		#로그 기록
 		insert_log(g.db, user['user_id'], request.url_rule)
 
@@ -54,7 +55,7 @@ def get_boards():
 
 	return jsonify(result)
 
-#게시판 단일 정보 불러오기
+#보드(메뉴) 단일 정보 불러오기
 @BP.route('/get_board/<string:board_url>')
 @jwt_optional
 def get_board(board_url):
@@ -65,9 +66,6 @@ def get_board(board_url):
 	if board is None:
 		return jsonify(reuslt = "board is empty")
 
-	print("\n\n\n")
-	print(get_jwt_identity())
-
 	#토큰이 있으면?
 	if get_jwt_identity():
 		user = select_user(g.db, get_jwt_identity())
@@ -75,9 +73,6 @@ def get_board(board_url):
 
 		#로그 기록
 		insert_log(g.db, user['user_id'], request.url_rule)
-
-		print("\n\n\n")
-		print(user)
 
 		#관리자이면?
 		if check_admin(g.db, user['user_id']):
@@ -97,7 +92,7 @@ def get_board(board_url):
 		result = "success")
 	return jsonify(result)
 	
-#해당 게시판의 글들 불러오기(페이지네이션) (OK)
+#특정 게시판의 글들 불러오기(페이지네이션) (OK)
 @BP.route('/get_posts/<string:tag_string>/<int:page>')
 def get_posts_page(tag_string, page):
 	result = {}
@@ -132,7 +127,6 @@ def get_posts_page(tag_string, page):
 		
 		#비밀글 여부 확인.
 		private = select_private_check(g.db, post['post_id'])
-		
 
 		post.update(
 			img_cnt = img_cnt,
@@ -144,7 +138,7 @@ def get_posts_page(tag_string, page):
 		result = "success")
 	return jsonify(result)
 
-#해당 게시판의 글들 불러오기(전체) (OK)
+#특정 게시판의 글들 불러오기(전체) (OK)
 @BP.route('/get_posts/<string:tag_string>')
 def get_posts_list(tag_string):
 	result = {}
@@ -187,9 +181,34 @@ def get_posts_list(tag_string):
 		result = "success")
 	return jsonify(result)
 
-#게시물 단일 불러오기 공통 URL (공개글 / 비공개글) (OK)
+#갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
+@BP.route('/get_image/<int:page>')
+def get_image(page):
+	result = {}
+
+	tag_in_post_id = select_tag_in_posts(['갤러리'])
+	
+	g_posts = select_gallery_posts(g.db, tag_in_post_id, page)
+
+	for post in g_posts:
+		files = []
+		db_files = select_attach(g.db, post['post_id'])
+			
+		for file in db_files:
+			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S-":
+				files.append(file['file_path'])
+
+		post.update(files = files)
+
+	result.update(
+		posts = g_posts,
+		result = "success")
+
+	return jsonify(result)
+
+#단일 포스트 불러오기 (공개글 / 비공개글 공통 URL) (OK)
 @BP.route('/get_post/<int:post_id>')
-@jwt_optional #우선 토큰이 유효하든 안하든 받고 본다.
+@jwt_optional
 def get_post(post_id):
 	private = select_private_check(g.db, post_id)
 	result = {}
@@ -241,14 +260,13 @@ def get_post(post_id):
 		else:
 			result.update(property = 0)
 
-	result.update(post = post)
-
-	print("\n\n\n\n\n")
-	print(result)
+	result.update(
+		post,
+		result = "success")
 
 	return jsonify(result)
-	
-#해당 게시글 불러오기(단일) (OK)
+
+#단일 포스트 불러오기(포스트 정보 가져오는 함) (OK)
 def get_post_func(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
@@ -303,30 +321,25 @@ def get_post_func(post_id):
 
 	return result
 
-#갤러리 글들 불러오기 (미리보기 이미지 때문에 따로 API 구현) (OK)
-@BP.route('/get_image/<int:page>')
-def get_image(page):
+#단일 바로가기 포스트 반환
+@BP.route('/get_post_shortcuts/<int:post_id>')
+def get_post_shortcuts(post_id):
 	result = {}
 
-	tag_in_post_id = select_tag_in_posts(['갤러리'])
-	
-	g_posts = select_gallery_posts(g.db, tag_in_post_id, page)
+	post = select_post_shortcuts(g.db, post_id)
 
-	for post in g_posts:
-		files = []
-		db_files = select_attach(g.db, post['post_id'])
-			
-		for file in db_files:
-			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] == "S-":
-				files.append(file['file_path'])
+	if post is None:
+		return jsonify(result = "define post")
 
-		post.update(files = files)
+	#프론트의 요구로 날짜 형식 변형
+	post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
 
 	result.update(
-		posts = g_posts,
-		result = "success")
+		result = "success",
+		post = post)
 
 	return jsonify(result)
+
 
 #######################################################
 #포스트 업로드 및 수정 및 삭제###############################
@@ -346,6 +359,12 @@ def post_upload():
 	anony = request.form['anony']
 	tags = request.form['tags']
 	files = request.files.getlist('files')
+
+	#욕 필터
+	if check_word_filter(title):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(content):
+		return jsonify(result = "unavailable word")
 
 	tag_list = tags.split('_')
 
@@ -395,21 +414,25 @@ def post_update():
 
 	post_id = request.form['post_id']
 
-	'''
-	access = access_check_post(g.db, post_id, user['user_id'])
-	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
-	if access is not 1: abort(400)
-	'''
+	#포스트 주인 확인 (수정은 관리자도 못함)
+	if not select_author_check(g.db, post_id, user['user_id']):
+		return jsonify(result = "you are not access")
 
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
 	files = request.files.getlist('files')
 
+	#욕 필터
+	if check_word_filter(title):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(content):
+		return jsonify(result = "unavailable word")
+
 	#수정된 파일이 있을 수 있으니 우선 첨부파일 날리고 본다.
 	delete_attach(g.db, post_id)
 	
-	update_post(g.db, post_id, title, content, anony, user['user_id'])
+	result = update_post(g.db, post_id, title, content, anony, user['user_id'])
 
 	#새롭게 받은 파일이 있는지 확인 DB삽입 작업
 	if files is not None:
@@ -433,7 +456,7 @@ def post_update():
 					return jsonify(result = "Wrong_file")
 
 	return jsonify(
-		result = "success")
+		result = result)
 
 #게시물 삭제
 @BP.route('/post_delete/<int:post_id>')
@@ -445,17 +468,14 @@ def post_delete(post_id):
 	#로그 기록
 	insert_log(g.db, user['user_id'], request.url_rule)
 
-	access = access_check_post(g.db, post_id, user['user_id'])
-	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
+	#삭제 권환이 있는 유저인지 확인 (관리자 토큰이면 허용됨)
+	if not delete_access_check_post(g.db, post_id, user['user_id']):
+		return jsonify(result = "do not access")
 
-	if access is not 1:
-		return jsonify(
-			result = "do not access")
-
-	delete_post(g.db, post_id)
+	result = delete_post(g.db, post_id)
 
 	return jsonify(
-		result = "success")
+		result = result)
 
 #######################################################
 #조회수 / 댓글 / 좋아요 처리################################
@@ -513,6 +533,10 @@ def comment_upload():
 	anony = request.form['anony']
 	comment_id = request.form['comment_id']
 
+	#욕 필터
+	if check_word_filter(comment):
+		return jsonify(result = "unavailable word")
+
 	if comment_id == "0":
 		comment_id = None
 	
@@ -531,7 +555,7 @@ def comment_delete(comment_id):
 	#로그 기록
 	insert_log(g.db, user['user_id'], request.url_rule)
 
-	access = access_check_comment(g.db, comment_id, user['user_id'])
+	access = delete_access_check_comment(g.db, comment_id, user['user_id'])
 
 	#해당 게시글의 작성자와 user토큰과 일치하지 않음, (관리자 제외)
 	if not access: abort(400)

@@ -32,6 +32,10 @@ def vote_upload():
 	vote_str = request.form['vote']
 	file = request.files.getlist('file')
 
+	#욕 필터
+	if check_word_filter(vote_str):
+		return jsonify(result = "unavailable word")
+
 	vote_replace = vote_str.replace("'", "\"")
 	vote_json = json.loads(vote_replace)
 

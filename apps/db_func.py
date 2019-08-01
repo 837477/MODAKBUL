@@ -159,7 +159,8 @@ def insert_post(db, user_id, title, content, anony, tags):
 
 	return post_id
 
-#해당 태그들이 속해있는 글 목록 쿼리문 반환(post_id만 반환)
+#입력된 특정 태그가 속해있는 포스트 ID 리스트 반환
+#(이 함수는 쿼리문을 반환해줌)
 def select_tag_in_posts(tag_list):	
 	sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id = "%s") P1 '
 	add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id = "%s") P%s '
@@ -185,34 +186,41 @@ def select_tag_in_posts(tag_list):
 			#result_sql += ';'
 	return result_sql
 
-#태그가 속해있는 글들(ALL) 반환 (페이지네이션)
+#특정 태그가 속해있는 포스트 리스트 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 
 	return result
-#태그가 속해있는 글들(ALL) 반환 (전체)
+#특정 태그가 속해있는 포스트 리스트 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony  FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
 
-#해당 포스트 단일 반환
+#포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT post_id, user_id AS author_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
-		
+	return result
+
+#포스트 단일 바로가기 반환 (외부링크 있는 게시물들)
+def select_post_shortcuts(db, post_id):
+	with db.cursor() as cursor:
+		sql = 'SELECT post_id, user_id AS author_id, post_title, post_view, post_date,  user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
+		cursor.execute(sql, (post_id,))
+		result = cursor.fetchone()
 
 	return result
 
-#포스트 미리보기 글들 반환 (갤러리 전용, 페이지네이션)
+#갤러리 포스트 미리보기 반환 (갤러리 전용, 페이지네이션)
 def select_gallery_posts(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
 		sql = 'SELECT post.post_id, post_title FROM post JOIN (' + tag_in_post_id + ') R ON post.post_id = r.post_id LIMIT %s, %s;'
@@ -240,7 +248,7 @@ def select_attach(db, post_id):
 		result = cursor.fetchall()
 	return result
 
-#포스트 파일 삭제 (전체삭제)
+#포스트 파일 삭제 (해당 post_id의 모든 파일을 삭제)
 def delete_attach(db, post_id):
 	with db.cursor() as cursor:
 		sql = "DELETE FROM post_attach WHERE post_id = %s;"
@@ -250,7 +258,7 @@ def delete_attach(db, post_id):
 
 #포스트 수정
 def update_post(db, post_id, title, content, anony, user_id):
-	#수정은 본인만 가능해야 하므로 AND 연산으로 해당 토큰으로 받은 user와 맞는지도 확인한다.
+	#수정은 본인만 가능해야 하므로 쿼리문에서도 추가적으로 AND 연산으로 해당 토큰으로 받은 user와 맞는지도 확인한다.
 	with db.cursor() as cursor:
 		sql = 'UPDATE post SET post_title=%s, post_content=%s, post_anony=%s WHERE post_id=%s AND user_id=%s;'
 		cursor.execute(sql, (title, content, anony, post_id, user_id,))
@@ -486,7 +494,7 @@ def check_already_vote(db, vote_id, user_id):
 #접근 권환 확인 ##########################################
 
 #포스트 삭제 권한 확인
-def access_check_post(db, post_id, user_id):
+def delete_access_check_post(db, post_id, user_id):
 	#관리자 체크
 	if check_admin(db, user_id):
 		return 1
@@ -498,7 +506,7 @@ def access_check_post(db, post_id, user_id):
 	return result['access']
 
 #댓글 삭제 권환 확인
-def access_check_comment(db, comment_id, user_id):
+def delete_access_check_comment(db, comment_id, user_id):
 	#관리자 체크
 	if check_admin(db, user_id):
 		return 1
@@ -515,6 +523,10 @@ def check_admin(db, user_id):
 		return True
 	else:
 		return False
+
+#포스트 작성 권한 확인
+#def insert_access_check_post(db, user_id, tag_list):
+
 
 #######################################################
 #검색 엔진###############################################
@@ -683,8 +695,6 @@ def select_log(db, topic_list):
 
 	return result
 
-
-
 #오늘 방문자 등록(IP)
 def insert_today_visitor(db, ip_adress):
 	with db.cursor() as cursor:
@@ -717,7 +727,7 @@ def select_today_visitor_cnt(db):
 #오늘 등록된 게시물 수 반환
 def select_today_posts_cnt(db):
 	with db.cursor() as cursor:
-		sql = "SELECT COUNT(*) AS post_cnt FROM post WHERE post_date BETWEEN CURDATE() AND NOW();"
+		sql = "SELECT COUNT(*) AS post_cnt FROM post WHERE post_url_link is NULL AND post_date BETWEEN CURDATE() AND NOW();"
 		cursor.execute(sql)
 		result = cursor.fetchone()
 	return result
@@ -725,7 +735,7 @@ def select_today_posts_cnt(db):
 #오늘 방문자 리셋
 def reset_today_visitor(db):
 	with db.cursor() as cursor:
-		sql = 'DELETE * FROM today_visitor;'
+		sql = 'DELETE FROM today_visitor;'
 		cursor.execute(sql)
 	db.commit()
 
@@ -786,78 +796,34 @@ def select_vote_select_status(db, que_id):
 #투표 질문의 선택지 유저 리스트
 def select_vote_select_status_user(db, que_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.que_id, IFNULL(A.select_id, '단답형') AS select_id, A.user_id, IFNULL(A.answer, '선택형') AS answer, B.user_name, B.user_color FROM vote_user_answer A LEFT JOIN (SELECT user_id, user_name, user_color FROM user) B ON A.user_id = B.user_id WHERE que_id = %s;"
+		sql = "SELECT A.que_id, IFNULL(A.select_id, '단답형') AS select_id, A.user_id, IFNULL(A.answer, '선택형') AS answer, B.user_name, B.user_color FROM vote_user_answer A LEFT JOIN (SELECT user_id, user_name, user_color FROM user) B ON A.user_id = B.user_id WHERE que_id = %s ORDER BY A.select_id ASC;"
 		cursor.execute(sql, (que_id,))
 		result = cursor.fetchall()
 	return result
-#######################################################
-#DB 클롤러 전용##########################################
 
-#크롤러 사이트 포스트들 업로드 전용 함수
-def c_insert_post(db, user_id, title, content, date, tags, url, img_url):
+#######################################################
+#크롤러 전용 포스트 업로드##################################
+
+#크롤링 포스트 업로드
+def crawl_insert_post(db, user_id, title, content, date, tags, url, img_url):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO post (user_id, post_title, post_content, post_date) VALUES (%s, %s, %s, %s);"
-		cursor.execute(sql, (user_id, title, content, date,))
+		sql = "INSERT INTO post (user_id, post_title, post_content, post_date, post_url_link, post_url_img) VALUES (%s, %s, %s, %s, %s, %s);"
+		cursor.execute(sql, (user_id, title, content, date, url, img_url))
 		
-		sql = "SELECT MAX(post_id) AS post_id FROM post"
-		cursor.execute(sql)
+		sql = "SELECT MAX(post_id) AS post_id FROM post WHERE user_id = %s;"
+		cursor.execute(sql, (user_id,))
 
 		post_id = cursor.fetchone()
+		post_id = post_id['post_id']
+
+		db.commit()
 
 		tags.append('대외활동')
 
 		for tag in tags:
 			sql = 'INSERT INTO post_tag (post_id, tag_id) VALUES (%s, %s);'
-			cursor.execute(sql, (post_id['post_id'], tag,))
-
-		sql = "INSERT INTO post_url (post_id, post_url_link, post_url_img) VALUES (%s, %s, %s);"
-
-		cursor.execute(sql, (post_id['post_id'], url, img_url,))
-
-	db.commit()
-
-#크롤러 사이트 포스트들 전체 삭제 전용 함수
-def c_delete_post(db):
-	target_posts = c_select_tag_in_posts(db, ['외부사이트'])
-	
-	with db.cursor() as cursor:
-		sql = 'DELETE FROM post WHERE post_id = %s;'
-		
-		for post in target_posts:
-			cursor.execute(sql, (post['post_id'],))
-
-		db.commit()
+			cursor.execute(sql, (post_id, tag,))
+			db.commit()
 
 	return "success"
-
-#외부사이트 태그가 들어가있는 포스트 아이디들 반환해주는 함수
-def c_select_tag_in_posts(db, tag_list):	
-	with db.cursor() as cursor:
-		sql = 'SELECT P1.post_id FROM (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P1 '
-		add_sql = 'JOIN (SELECT post_id FROM post_tag WHERE tag_id LIKE "%s") P%s '
-		i = 2
-		result_sql = ""
-
-		for tag in tag_list:
-			if tag == tag_list[0]:
-				result_sql +=(sql %(tag))
-
-			elif tag != tag_list[len(tag_list)-1]:
-				result_sql +=(add_sql %(tag, i))
-				i +=1
-				
-			else:
-				result_sql +=(add_sql %(tag, i))
-				i +=1
-				result_sql += "ON P1.post_id = P2.post_id "
-				for i in range(3, i):
-					temp = "AND P1.post_id = P%s.post_id "
-					temp = (temp %(i))
-					result_sql += temp
-				result_sql += ';'
-		
-		cursor.execute(result_sql)
-		result = cursor.fetchall()
-
-	return result
 
