@@ -16,7 +16,7 @@ def schedule_init():
 	scheduler = BackgroundScheduler()
 	#scheduler.add_job(func = test_bg, trigger = "interval", seconds = 1, timezone = t_zone)
 
-	scheduler.add_job(modakbul_crawler, 'cron', hour = 21, minute = 10, timezone = t_zone)
+	scheduler.add_job(modakbul_crawler, 'cron', hour = 0, minute = 22, timezone = t_zone)
 	scheduler.add_job(today_analysis, 'cron', hour = 23, minute = 58, timezone = t_zone)
 	
 	# weeks, days, hours, minutes, seconds

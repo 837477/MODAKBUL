@@ -8,17 +8,15 @@ from word_filter import *
 BP = Blueprint('search', __name__)
 
 #검색!
-@BP.route('/search', methods=['POST'])
-def search():
+@BP.route('/search/<string:topic>')
+def search(topic):
 	result = {}
-
-	topic = request.form['topic']
 
 	#욕 필터
 	if check_word_filter(topic):
 		return jsonify(result = "unavailable word")
 
-	topic_list = topic.split(' ')
+	topic_list = topic.split('&')
 	posts = select_search(g.db, topic_list)
 	
 	filter_posts = []
