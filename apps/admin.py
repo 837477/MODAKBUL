@@ -3,6 +3,7 @@ from werkzeug import *
 from flask_jwt_extended import *
 from db_func import *
 import re
+from word_filter import *
 
 BP = Blueprint('admin', __name__)
 

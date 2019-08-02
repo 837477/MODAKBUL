@@ -124,14 +124,10 @@ def get_posts_page(tag_string, page):
 					img_cnt += 1
 				else:
 					file_cnt += 1
-		
-		#비밀글 여부 확인.
-		private = select_private_check(g.db, post['post_id'])
 
 		post.update(
 			img_cnt = img_cnt,
-			file_cnt = file_cnt,
-			private = private)
+			file_cnt = file_cnt)
 
 	result.update(
 		posts = posts,
@@ -168,13 +164,10 @@ def get_posts_list(tag_string):
 					img_cnt += 1
 				else:
 					file_cnt += 1
-		
-		private = select_private_check(g.db, post['post_id'])
 
 		post.update(
 			img_cnt = img_cnt,
-			file_cnt = file_cnt,
-			private = private)
+			file_cnt = file_cnt)
 
 	result.update(
 		posts = posts,
@@ -210,56 +203,47 @@ def get_image(page):
 @BP.route('/get_post/<int:post_id>')
 @jwt_optional
 def get_post(post_id):
-	private = select_private_check(g.db, post_id)
-	result = {}
-	#비밀글이면?
-	if private == 1:
+	private = secret_post_check(g.db, post_id)
+	result = {"property": 0}
 
-		#토큰이 유효하면?
-		if get_jwt_identity():
-			#해당 토큰으로 유저 정보를 불러오고
-			user = select_user(g.db, get_jwt_identity())
-			if user is None: abort(400)
+	#토큰 유무 확인
+	if get_jwt_identity():
+		#해당 토큰으로 유저 정보를 불러오고
+		user = select_user(g.db, get_jwt_identity())
+		if user is None: abort(400)
 
-			#로그 기록
-			insert_log(g.db, user['user_id'], request.url_rule)
+		#로그 기록
+		insert_log(g.db, user['user_id'], request.url_rule)
 
+		#비밀글이면?
+		if private:
 			#Admin 체크
 			if check_admin(g.db, user['user_id']):
 				post = get_post_func(post_id)
-			
-			#Admin 아님
+				result.update(admin = 1)
+			#작성자 본인이라면?
+			elif select_author_check(g.db, post_id, user['user_id']):
+				post = get_post_func(post_id)
+				result['property'] = 1
+			#관리자 / 작성자도 아니면 뻐큐
 			else:
-				#이 포스트 작성자가 본인이면?
-				if select_author_check(g.db, post_id, user['user_id']):
-					post = get_post_func(post_id)
-					result.update(property = 1)
-				#본인이 아니면?
-				else:
-					return jsonify(result = "do not access")
-		#토큰이 유효하지 않으면?
+				return jsonify(result = "do not access")
+		#비밀글이 아니요!
 		else:
-			return jsonify(result = "do not access")
-			
-	#비밀글이 아니면?
-	else:
-		post = get_post_func(post_id)
-		#우선 토큰있는지 확인
-		if get_jwt_identity():
+			post = get_post_func(post_id)
 
-			#해당 토큰으로 유저 정보를 불러오고
-			user = select_user(g.db, get_jwt_identity())
-			
-			#이 포스트 작성자가 본인이면?
+			if check_admin(g.db, user['user_id']):
+				result.update(admin = 1)
+
 			if select_author_check(g.db, post_id, user['user_id']):
-				result.update(property = 1)
-			#본인이 아니면?
-			else:
-				result.update(property = 0)
-		#토큰이 없으면 본인이 작성한 글이 아닌걸로 간주.
+				result['property'] = 1
+	else:	
+		#비밀글이면?
+		if private:
+			return jsonify(result = "do not access")
 		else:
-			result.update(property = 0)
-
+			post = get_post_func(post_id)
+	
 	result.update(
 		post,
 		result = "success")
@@ -321,26 +305,6 @@ def get_post_func(post_id):
 
 	return result
 
-#단일 바로가기 포스트 반환
-@BP.route('/get_post_shortcuts/<int:post_id>')
-def get_post_shortcuts(post_id):
-	result = {}
-
-	post = select_post_shortcuts(g.db, post_id)
-
-	if post is None:
-		return jsonify(result = "define post")
-
-	#프론트의 요구로 날짜 형식 변형
-	post['post_date'] = post['post_date'].strftime("%Y년 %m월 %d일 %H:%M:%S")
-
-	result.update(
-		result = "success",
-		post = post)
-
-	return jsonify(result)
-
-
 #######################################################
 #포스트 업로드 및 수정 및 삭제###############################
 
@@ -357,22 +321,38 @@ def post_upload():
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
+	secret = request.form['secret']
 	tags = request.form['tags']
 	files = request.files.getlist('files')
+
+	#게시글 작성권한 확인
+	if check_admin(g.db, user['user_id']):
+		pass
+	else:
+		insert_check = insert_access_check_post(g.db, tags)
+		if insert_check is None:
+			return jsonify(result = "define board")
+		#관리자가 아닌데, 이 보드의 접근권한이 관리자부터면?
+		elif insert_check['board_access'] == 1:
+			return jsonify(result = "do not access")
 
 	#욕 필터
 	if check_word_filter(title):
 		return jsonify(result = "unavailable word")
 	if check_word_filter(content):
 		return jsonify(result = "unavailable word")
-
 	tag_list = tags.split('_')
 
-	#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
-	post_id = insert_post(g.db, user['user_id'], title, content, anony, tag_list)
+	#익명 글이면?
+	anony = int(anony)
+	if anony:
+		#게시글 등록을하고 등록된 포스트 아이디를 받아온다.
+		post_id = insert_post(g.db, "anony", title, content, anony, secret, tag_list)
+	else:
+		post_id = insert_post(g.db, user['user_id'], title, content, anony, secret, tag_list)
 
 	if post_id is None: abort(400)
-
+	
 	else:
 		#첨부할 파일이 있는지 확인
 		if files:
@@ -421,6 +401,7 @@ def post_update():
 	title = request.form['title']
 	content = request.form['content']
 	anony = request.form['anony']
+	secret = request.form['secret']
 	files = request.files.getlist('files')
 
 	#욕 필터
@@ -432,7 +413,7 @@ def post_update():
 	#수정된 파일이 있을 수 있으니 우선 첨부파일 날리고 본다.
 	delete_attach(g.db, post_id)
 	
-	result = update_post(g.db, post_id, title, content, anony, user['user_id'])
+	result = update_post(g.db, post_id, title, content, anony, secret, user['user_id'])
 
 	#새롭게 받은 파일이 있는지 확인 DB삽입 작업
 	if files is not None:
@@ -540,7 +521,14 @@ def comment_upload():
 	if comment_id == "0":
 		comment_id = None
 	
-	result = insert_comment(g.db, post_id, user['user_id'], comment, anony, comment_id)
+	print("\n\n\n\n\n\n\n")
+
+	anony = int(anony)
+	#익명이냐?
+	if anony:
+		result = insert_comment(g.db, post_id, "anony", comment, anony, comment_id)
+	else:
+		result = insert_comment(g.db, post_id, user['user_id'], comment, anony, comment_id)
 
 	return jsonify(
 		result = result)

@@ -139,10 +139,10 @@ def select_board(db, board_url):
 	return result
 
 #포스트 업로드
-def insert_post(db, user_id, title, content, anony, tags):
+def insert_post(db, user_id, title, content, anony, secret, tags):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO post (user_id, post_title, post_content, post_anony) VALUES (%s, %s, %s, %s);"
-		cursor.execute(sql, (user_id, title, content, anony,))
+		sql = "INSERT INTO post (user_id, post_title, post_content, post_anony, post_secret) VALUES (%s, %s, %s, %s, %s);"
+		cursor.execute(sql, (user_id, title, content, anony, secret))
 		
 		sql = "SELECT MAX(post_id) AS post_id FROM post WHERE user_id = %s;"
 		cursor.execute(sql, (user_id,))
@@ -189,7 +189,7 @@ def select_tag_in_posts(tag_list):
 #특정 태그가 속해있는 포스트 리스트 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 
@@ -197,7 +197,7 @@ def select_posts_page(db, tag_in_post_id, page):
 #특정 태그가 속해있는 포스트 리스트 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -205,16 +205,7 @@ def select_posts_list(db, tag_in_post_id):
 #포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT post_id, post_title, post_content, post_view, post_date, post_anony, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
-		cursor.execute(sql, (post_id,))
-		result = cursor.fetchone()
-
-	return result
-
-#포스트 단일 바로가기 반환 (외부링크 있는 게시물들)
-def select_post_shortcuts(db, post_id):
-	with db.cursor() as cursor:
-		sql = 'SELECT post_id, user_id AS author_id, post_title, post_view, post_date,  user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, post_title, post_content, post_view, post_date, post_anony, post_secret, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
@@ -257,11 +248,11 @@ def delete_attach(db, post_id):
 	return "success"
 
 #포스트 수정
-def update_post(db, post_id, title, content, anony, user_id):
+def update_post(db, post_id, title, content, anony, secret, user_id):
 	#수정은 본인만 가능해야 하므로 쿼리문에서도 추가적으로 AND 연산으로 해당 토큰으로 받은 user와 맞는지도 확인한다.
 	with db.cursor() as cursor:
-		sql = 'UPDATE post SET post_title=%s, post_content=%s, post_anony=%s WHERE post_id=%s AND user_id=%s;'
-		cursor.execute(sql, (title, content, anony, post_id, user_id,))
+		sql = 'UPDATE post SET post_title=%s, post_content=%s, post_anony=%s, post_secret=%s WHERE post_id=%s AND user_id=%s;'
+		cursor.execute(sql, (title, content, anony, secret, post_id, user_id,))
 	db.commit()
 	return "success"
 
@@ -277,17 +268,12 @@ def delete_post(db, post_id):
 #포스트 부가 기능#########################################
 
 #비밀글 확인 (0: 공개, 1:비밀 반환)
-def select_private_check(db, post_id):
+def secret_post_check(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT tag_id from post_tag WHERE post_id = %s AND tag_id="비밀글";'
+		sql = 'SELECT post_secret FROM post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id, ))
 		result = cursor.fetchone()
-
-		#꼼수이용! 비밀글 태그가 없으면 None을 반환하니 이것으로 판단.
-		if result is None:
-			return 0
-		else:
-			return 1
+	return result['post_secret']
 
 #포스트의 주인 확인 (0: 아님, 1: 맞음 반환)
 def select_author_check(db, post_id, user_id):
@@ -332,7 +318,7 @@ def delete_post_like(db, post_id, user_id):
 #포스트 댓글 반환
 def select_comment(db, post_id):
 	with db.cursor() as cursor:
-		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, IF(A.comment_anony=0, B.user_name, '익명') AS author_name, IF(A.comment_anony=0, B.user_color, '#D8D8D8') AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
+		sql = "SELECT A.comment_id, A.user_id, A.comment, A.comment_anony, A.comment_date, A.comment_parent, B.user_name AS author_name, user_color AS author_color FROM post_comment A JOIN user B ON A.user_id = B.user_id WHERE post_id = %s ORDER BY A.comment_date ASC;"
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchall()
 
@@ -525,7 +511,12 @@ def check_admin(db, user_id):
 		return False
 
 #포스트 작성 권한 확인
-#def insert_access_check_post(db, user_id, tag_list):
+def insert_access_check_post(db, board_url):
+	with db.cursor() as cursor:
+		sql = "SELECT board_access FROM board WHERE board_url = %s;"
+		cursor.execute(sql, (board_url,))
+		result = cursor.fetchone()
+	return result
 
 
 #######################################################
@@ -779,7 +770,7 @@ def select_posts_like_rank(db, days):
 #포스트 조회수 랭킹 반환
 def select_posts_view_rank(db, days):
 	with db.cursor() as cursor:
-		sql = "SELECT post_id, post_title, post_view, post_date FROM post WHERE post_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW() ORDER BY post_view DESC;"
+		sql = "SELECT post_id, post_title, post_view, post_date FROM post WHERE post_date BETWEEN DATE_SUB(CURDATE(), INTERVAL %s DAY) AND NOW() AND post_view != 0 ORDER BY post_view DESC;"
 		cursor.execute(sql, (days,))
 		result = cursor.fetchall()
 	return result

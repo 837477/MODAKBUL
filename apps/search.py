@@ -3,23 +3,29 @@ from werkzeug import *
 from flask_jwt_extended import *
 from operator import itemgetter
 from db_func import *
-
+from word_filter import *
 
 BP = Blueprint('search', __name__)
 
 #검색!
-@BP.route('/search/<string:topic>')
-def search(topic):
+@BP.route('/search', methods=['POST'])
+def search():
 	result = {}
 
-	topic_list = topic.split('_')
+	topic = request.form['topic']
+
+	#욕 필터
+	if check_word_filter(topic):
+		return jsonify(result = "unavailable word")
+
+	topic_list = topic.split(' ')
 	posts = select_search(g.db, topic_list)
 	
 	filter_posts = []
 
 	for post in posts:
 		#비밀글은 그냥 모든 작업을 건너 뛴다.
-		private = select_private_check(g.db, post['post_id'])
+		private = secret_post_check(g.db, post['post_id'])
 		if private == 1:
 			continue
 
