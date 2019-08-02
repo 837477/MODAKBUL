@@ -54,6 +54,14 @@ def delete_user_tag(db, user_id, tag):
 	do.commit()
 	return "success"
 
+#특정 태그가 들어간 사용자 반환
+def select_user_tag_search(db, tag):
+	with db.cursor() as cursor:
+		sql = "SELECT A.user_id, A.user_name, A.user_color, B.tag_id FROM user A RIGHT JOIN (SELECT * FROM user_tag WHERE tag_id = %s) B ON A.user_id = B.user_id;"
+		cursor.execute(sql, (tag,))
+		result = fetchall()
+	return result
+
 #사용자가 좋아요 한 게시물 반환
 def select_user_post_like(db, user_id):
 	with db.cursor() as cursor:

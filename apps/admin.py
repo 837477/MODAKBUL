@@ -308,25 +308,26 @@ def update_tag():
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
-	tag = request.form['tag']
+	old_tag = request.form['old_tag']
+	old_tag = request.form['new_tag']
 
 	#욕 필터
-	if check_word_filter(tag):
+	if check_word_filter(new_tag):
 		return jsonify(result = "unavailable word")
 
-	check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', tag)
+	check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', new_tag)
 
 	#길이가 달라졌다?! = 특수문자 들어간거임
-	if len(tag) != len(cehck):
+	if len(new_tag) != len(check):
 		return jsonify(result = "do not use special characters")
 
 	#이 접근 불가 태그 검사
 	if tag in ACCESS_DENIED_TAG: abort(400)
 
-	if check_tag(g.db, tag) is None:
+	if check_tag(g.db, new_tag) is None:
 		result = "tag is not define"
 	else:
-		result = update_tag(g.db, tag)
+		result = update_tag(g.db, new_tag)
 
 	return jsonify(result = result)
 
@@ -373,7 +374,11 @@ def change_pw():
 		abort(400)
 
 	before_pw = request.form['before_pw']
-	new_pw = request.form['new_pw']
+	new_pw_1 = request.form['new_pw_1']
+	new_pw_2 = request.form['new_pw_2']
+
+	if new_pw_1 != new_pw_2:
+		return jsonify(result = "not same pw")
 
 	if check_password_hash(user['pw'], before_PW):
 		result = update_user_pw(g.db, user['user_id'], generate_password_hash(new_pw))

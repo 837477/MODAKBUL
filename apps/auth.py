@@ -121,6 +121,26 @@ def user_color():
 #######################################################
 #관리자 권한#############################################
 
+#블랙리스트 반환
+@BP.route('/get_blacklist')
+@jwt_required
+def get_blacklist():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	result = select_user_tag_search(g.db, '블랙리스트')
+
+	return jsonify(
+		blacklist = result,
+		result = "success")
+
 #블랙리스트 등록
 @BP.route('/user_black_apply', methods=['POST'])
 @jwt_required
