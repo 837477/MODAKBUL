@@ -207,11 +207,11 @@ def change_logp():
 	return jsonify(result = "success")
 
 #부서 반환
-@BP.route('/get_department')
-def get_department():
+@BP.route('/get_department/<int:dm_type>')
+def get_department(dm_type):
 	result = {}
 
-	department = select_department(g.db)
+	department = select_department(g.db, dm_type)
 
 	result.update(
 		department = department,
@@ -236,6 +236,8 @@ def department_upload():
 	dm_name = request.form['dm_name']
 	dm_chairman = request.form['dm_chairman']
 	dm_intro = request.form['dm_intro']
+	dm_type = request.form['dm_type']
+	dm_img = request.files['dm_img']
 
 	#욕 필터
 	if check_word_filter(dm_name):
@@ -245,10 +247,71 @@ def department_upload():
 	if check_word_filter(dm_intro):
 		return jsonify(result = "unavailable word")
 
-	result = insert_department(g.db, dm_name, dm_chairman, dm_intro)
+	#확장자 및 파일이름길이 확인.
+	if secure_filename(dm_img.filename).split('.')[-1] in IMG_EXTENSIONS and len(dm_img.filename) < 240:
+		#파일이름 변경.
+		img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_dm_img_' + dm_img.filename
 
-	return jsonify(
-		result = result)
+		result = update_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
+
+		#디비 저장 성공이면,
+		if result == "success":
+			#파일 저장
+			dm_img.save('.' + UPLOAD_IMG_PATH + img_name)
+		else:
+			return jsonify(result = "file save fail")
+	else:
+		return jsonify(result = "wrong extension")
+
+	return jsonify(result = "success")
+
+#부서 수정
+@BP.route('/department_update', methods=['POST'])
+@jwt_required
+def department_update():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	dm_id = request.form['dm_id']
+	dm_name = request.form['dm_name']
+	dm_chairman = request.form['dm_chairman']
+	dm_intro = request.form['dm_intro']
+	dm_type = request.form['dm_type']
+	dm_img = request.files['dm_img']
+
+
+	#욕 필터
+	if check_word_filter(dm_name):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(dm_chairman):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(dm_intro):
+		return jsonify(result = "unavailable word")
+
+	#확장자 및 파일이름길이 확인.
+	if secure_filename(dm_img.filename).split('.')[-1] in IMG_EXTENSIONS and len(dm_img.filename) < 240:
+		#파일이름 변경.
+		img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_dm_img_' + dm_img.filename
+
+		result = update_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
+
+		#디비 저장 성공이면,
+		if result == "success":
+			#파일 저장
+			dm_img.save('.' + UPLOAD_IMG_PATH + img_name)
+		else:
+			return jsonify(result = "file save fail")
+	else:
+		return jsonify(result = "wrong extension")
+
+	return jsonify(result = "success")
 
 #부서 삭제
 @BP.route('/department_delete', methods=['POST'])
@@ -425,6 +488,142 @@ def search_log():
 		result_log = result_log)
 
 	return jsonify(result)
+
+#총 회원 반환 (미사용)
+@BP.route('/get_user_list')
+@jwt_required
+def get_user_list():
+	result = {}
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	user_list = select_user_list(g.db)
+
+	for user in user_list:
+		tags = select_user_tag(g.db, user['user_id'])
+		user.update(user_tags = tags)
+
+	return jsonify(
+		result = "result",
+		user_list = user_list)
+
+#특정 회원 반환 (OK)
+@BP.route('/get_user_search', methods=['POST'])
+@jwt_required
+def get_user_search():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	search = request.form['search']
+
+	user = select_user_search(g.db, search)
+
+	if user is None:
+		return jsonify(result = "user is not defined")
+
+	tags = select_user_tag(g.db, user['user_id'])
+
+	return jsonify(
+		result = "success",
+		user = user,
+		user_tags = tags)
+
+#블랙리스트 반환 (OK)
+@BP.route('/get_blacklist')
+@jwt_required
+def get_blacklist():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	blacklist = select_user_tag_search(g.db, '블랙리스트')
+
+	for user in blacklist:
+		tags = select_user_tag(g.db, user['user_id'])
+		user.update(tags = tags)
+
+	return jsonify(
+		blacklist = blacklist,
+		result = "success")
+
+#블랙리스트 등록 (OK)
+@BP.route('/user_black_apply', methods=['POST'])
+@jwt_required
+def user_black_apply():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	target_id = request.form['target_id']
+
+	target = select_user(g.db, target_id)
+	if target is None:
+		return jsonify(result = "no member")
+
+	#이미 블랙인지 확인
+	target_tags = select_user_tag(g.db, target['user_id'])
+	if '블랙리스트' in target_tags:
+		return jsonify(result = "already blacklist")
+
+	result = insert_user_tag(g.db, target['user_id'], "블랙리스트")
+
+	return jsonify(
+		result = result)
+
+#블랙리스트 해지 (OK)
+@BP.route('/user_black_cancel', methods=['POST'])
+@jwt_required
+def user_black_cancle():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 계정이 아니면 ㅃ2
+	if not check_admin(g.db, user['user_id']):
+		return jsonify(result = "you are not admin")
+
+	target_id = request.form['target_id']
+
+	target = select_user(g.db, target_id)
+	if target is None:
+		return jsonify(result = "no member")
+
+	target_tags = select_user_tag(g.db, target['user_id'])
+	if '블랙리스트' not in target_tags:
+		return jsonify(result = "no blacklist")
+
+	result = delete_user_tag(g.db, target['user_id'], "블랙리스트")
+
+	return jsonify(
+		result = result)
 
 #관리자 비밀번호 변경
 @BP.route('/change_pw', methods=['POST'])

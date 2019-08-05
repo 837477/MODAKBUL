@@ -1,7 +1,6 @@
 from global_func import *
 from datetime import datetime
 
-#등록 - 반환 - 수정 - 삭제 #순서
 #######################################################
 #사용자 관련#############################################
 
@@ -22,6 +21,14 @@ def select_user(db, user_id):
 	with db.cursor() as cursor: 
 		sql = "SELECT * FROM user WHERE user_id = %s LIMIT 1"
 		cursor.execute(sql, (user_id,))
+		result = cursor.fetchone()
+	return result
+
+#특정 사용자 검색(학번 혹은 이름 검색)
+def select_user_search(db, search_topic):
+	with db.cursor() as cursor:
+		sql = "SELECT user_id, user_name, user_color FROM user WHERE (user_id = %s OR user_name = %s) AND (user_id != 'admin' AND user_id != 'anony');"
+		cursor.execute(sql, (search_topic, search_topic,))
 		result = cursor.fetchone()
 	return result
 
@@ -51,7 +58,7 @@ def delete_user_tag(db, user_id, tag):
 	with db.cursor() as cursor:
 		sql = "DELETE FROM user_tag WHERE user_id=%s AND tag_id=%s;"
 		cursor.execute(sql, (user_id, tag,))
-	do.commit()
+	db.commit()
 	return "success"
 
 #특정 태그가 들어간 사용자 반환
@@ -59,7 +66,7 @@ def select_user_tag_search(db, tag):
 	with db.cursor() as cursor:
 		sql = "SELECT A.user_id, A.user_name, A.user_color, B.tag_id FROM user A RIGHT JOIN (SELECT * FROM user_tag WHERE tag_id = %s) B ON A.user_id = B.user_id;"
 		cursor.execute(sql, (tag,))
-		result = fetchall()
+		result = cursor.fetchall()
 	return result
 
 #사용자가 좋아요 한 게시물 반환
@@ -571,6 +578,15 @@ def insert_variable(db, key, value):
 
 	return "success"
 
+#정적 variable 삭제
+def delete_variable(db, key):
+	with db.cursor() as cursor:
+		sql = 'DELETE FROM variable WHERE v_key=%s;'
+		cursor.execute(sql, (key,))
+	db.commit()
+
+	return "success"
+
 #정적 variable 리스트 반환
 def select_variables(db):
 	with db.cursor() as cursor:
@@ -587,15 +603,6 @@ def select_value(db, key):
 		result = cursor.fetchone()
 	return result
 
-#정적 variable 삭제
-def delete_variable(db, key):
-	with db.cursor() as cursor:
-		sql = 'DELETE FROM variable WHERE v_key=%s;'
-		cursor.execute(sql, (key,))
-	db.commit()
-
-	return "success"
-
 #정적 variable 수정
 def update_variable(db, key, value):
 	with db.cursor() as cursor:
@@ -606,21 +613,30 @@ def update_variable(db, key, value):
 	return "success"
 
 #부서 등록
-def insert_department(db, dm_name, dm_chairman, dm_intro):
+def insert_department(db, dm_name, dm_chairman, dm_intro, dm_img, dm_type):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO department(dm_name, dm_chairman, dm_intro) VALUES(%s, %s, %s);"
-		cursor.execute(sql, (dm_name, dm_chairman, dm_intro,))
+		sql = "INSERT INTO department(dm_name, dm_chairman, dm_intro, dm_img, dm_type) VALUES(%s, %s, %s, %s, %s);"
+		cursor.execute(sql, (dm_name, dm_chairman, dm_intro, dm_type,))
 	db.commit()
 
 	return "success"
 
 #부서 반환
-def select_department(db):
+def select_department(db, dm_type):
 	with db.cursor() as cursor:
-		sql = "SELECT * FROM department;"
-		cursor.execute(sql)
+		sql = "SELECT * FROM department WHERE dm_type=%s;"
+		cursor.execute(sql, (dm_type,))
 		result = cursor.fetchall()
 	return result
+
+#부서 수정
+def update_department(db, dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type):
+	with db.cursor() as cursor:
+		sql = "UPDATE department SET dm_name = %s, dm_chairman = %s, dm_intro = %s, dm_img = %s, dm_type = %s WHERE dm_id = %s;"
+		cursor.execute(sql, (dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type,))
+	dm.commit()
+
+	return "success"
 
 #부서 삭제
 def delete_department(db, dm_id):
