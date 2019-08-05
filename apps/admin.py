@@ -7,17 +7,18 @@ from word_filter import *
 
 BP = Blueprint('admin', __name__)
 
+UPLOAD_IMG_PATH = "/static/image/"
+IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+
 ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '외부사이트', '장부', '취업', '학생회소개'}
-
-ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동_', '대외활동_공모전', '대외활동_취업', '투표', '장부_']
-
+ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동', '대외활동_공모전', '대외활동_취업', '투표', '장부']
 #######################################################
 #관리자 기능#############################################
 
-#게시판 추가/수정
-@BP.route('/board_upload/<string:board_url>')
+#게시판 추가/수정 (OK)
+@BP.route('/board_upload', methods=['POST'])
 @jwt_required
-def board_upload(board_url):
+def board_upload():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
@@ -28,18 +29,15 @@ def board_upload(board_url):
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
-	boards = request.json['boards']
+	boards_str = request.form['boards']
 
-	#욕 필터
-	if check_word_filter(boards['board_url']):
-		return jsonify(result = "unavailable word")
-	if check_word_filter(boards['board_name']):
-		return jsonify(result = "unavailable word")
+	boards_replace = boards_str.replace("'", "\"")
+	boards = json.loads(boards_replace)
 
 	#전송받은 board_url 리스트들
 	board_url_list = []
 	for board in boards:
-		check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', board['board_url'])
+		check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9|_]+').sub('', board['board_url'])
 
 		#길이가 달라졌다?! = 특수문자 들어간거임
 		if len(board['board_url']) != len(check):
@@ -51,44 +49,19 @@ def board_upload(board_url):
 	check_board = list(set(ACCESS_DENIED_BOARD) - set(board_url_list))
 
 	#만약 필수 보드가 체크보드에 남아있다면?
-	if check_board is not None:
+	if len(check_board) > 0:
 		return jsonify(
 			result = "fail",
 			necessary_board = check_board)
 
 	#필수 보드가 다 포함이라면?
 	else:
-		update_boards(g.db, boards)
-		return jsonify(result = success)
+		result = update_boards(g.db, boards)
+		return jsonify(result = result)
 
-#정적 variable 리스트 반환
-@BP.route('/get_variables')
-def get_variables():
-	result = {}
-
-	variables = select_variables(g.db)
-
-	result.update(
-		variables = variables,
-		result = "success")
-
-	return jsonify(result)
-
-#정적 variable 단일 반환
-@BP.route('/get_value/<string:key>')
-def get_value(key):
-	result = {}
-
-	value = select_value(g.db, key)
-
-	if value is None:
-		return jsonify(result = "define key")
-
-	result.update(
-		value = value['value'],
-		result = "success")
-
-	return jsonify(result)
+###############################################
+#여기는 우선 만들어둠.
+#정적변수 테이블을 (추가 / 삭제)는 사실상 관리자가 쓸 일이 없을 것 같음.
 
 #정적 variable 추가
 @BP.route('/variable_upload', methods=['POST'])
@@ -138,6 +111,100 @@ def variable_delete():
 
 	return jsonify(
 		result = result)
+###############################################
+
+#정적 variable 리스트 반환 (OK)
+@BP.route('/get_variables')
+def get_variables():
+	result = {}
+
+	variables = select_variables(g.db)
+
+	result.update(
+		variables = variables,
+		result = "success")
+
+	return jsonify(result)
+
+#정적 variable 단일 반환 (OK)
+@BP.route('/get_value/<string:key>')
+def get_value(key):
+	result = {}
+
+	value = select_value(g.db, key)
+
+	if value is None:
+		return jsonify(result = "define key")
+
+	result.update(
+		value = value['value'],
+		result = "success")
+
+	return jsonify(result)
+
+#정적 variable 값 변경 (OK)
+@BP.route('/variable_update', methods=['POST'])
+@jwt_required
+def variable_update():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	key = request.form['key']
+	value = request.form['value']
+
+	#욕 필터
+	if check_word_filter(key):
+		return jsonify(result = "unavailable word")
+	if check_word_filter(value):
+		return jsonify(result = "unavailable word")
+
+	result = update_variable(g.db, key, value)
+
+	return jsonify(result = result)
+
+#학생회 로고 변경 (로고는 이미지를 받아야하니 정적변수 수정을 따로 구현) (OK)
+@BP.route('/change_logo', methods=['POST'])
+@jwt_required
+def change_logp():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	#이미지를 받는다.
+	img = request.files['img']
+	
+	#확장자 및 파일이름길이 확인.
+	if secure_filename(img.filename).split('.')[-1] in IMG_EXTENSIONS and len(img.filename) < 240:
+
+		#파일이름 변경.
+		img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_Modakbullogo_' + img.filename
+
+		#변경된 파일이름 학생회 로고 변수에 저장.
+		result = update_variable(g.db, "학생회로고", img_name)
+
+		#디비 저장 성공이면,
+		if result == "success":
+			#파일 저장
+			img.save('.' + UPLOAD_IMG_PATH + img_name)
+		else:
+			return jsonify(result = "file save fail")
+	else:
+		return jsonify(result = "wrong extension")
+
+	return jsonify(result = "success")
 
 #부서 반환
 @BP.route('/get_department')
@@ -204,7 +271,7 @@ def department_delete():
 	return jsonify(
 		result = result)
 
-#태그 목록 반환
+#태그 목록 반환 (OK)
 @BP.route('/get_tags')
 @jwt_required
 def get_tags():

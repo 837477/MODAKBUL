@@ -124,7 +124,7 @@ def update_boards(db, boards):
 		
 		sql = "INSERT INTO board VALUES(%s, %s, %s, %s);"
 
-		for board in borads:
+		for board in boards:
 			cursor.execute(sql, (board['board_url'], board['board_rank'], board['board_name'], board['board_access'],))
 	db.commit()
 
@@ -592,6 +592,15 @@ def delete_variable(db, key):
 	with db.cursor() as cursor:
 		sql = 'DELETE FROM variable WHERE v_key=%s;'
 		cursor.execute(sql, (key,))
+	db.commit()
+
+	return "success"
+
+#정적 variable 수정
+def update_variable(db, key, value):
+	with db.cursor() as cursor:
+		sql = 'UPDATE variable SET value = %s WHERE v_key = %s;'
+		cursor.execute(sql, (value, key,))
 	db.commit()
 
 	return "success"

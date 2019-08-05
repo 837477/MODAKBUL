@@ -15,7 +15,7 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 #######################################################
 #투표 기능###############################################
 
-#투표 업로드
+#투표 업로드 (OK)
 @BP.route('/vote_upload', methods=['POST'])
 @jwt_required
 def vote_upload():
@@ -86,7 +86,7 @@ def vote_upload():
 		}
 	'''
 
-#투표 하기
+#투표 하기 (OK)
 @BP.route('/vote_answer', methods=['POST'])
 @jwt_required
 def vote_answer():
@@ -134,7 +134,7 @@ def vote_answer():
 
 	return jsonify(result = result)
 
-#투표 글들 불러오기
+#투표 목록 불러오기 (OK)
 @BP.route('/get_votes')
 def get_votes():
 	votes = select_votes(g.db)
@@ -147,7 +147,7 @@ def get_votes():
 		result = "success",
 		votes = votes)
 
-#해당 투표 글 불러오기
+#특정 투표 글 불러오기 (OK)
 @BP.route('/get_vote/<int:vote_id>')
 def get_vote(vote_id):
 	result = {}
@@ -174,7 +174,25 @@ def get_vote(vote_id):
 
 	return jsonify(result)
 
-#투표 마감기한 수정
+#투표 삭제 (OK)
+@BP.route('/vote_delete/<int:vote_id>')
+@jwt_required
+def vote_delete(vote_id):
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+	
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	result = delete_vote(g.db, vote_id, user['user_id'])
+
+	return jsonify(result = result)
+
+#투표 마감기한 수정 (미사용 중)
 @BP.route('/vote_update', methods=['POST'])
 @jwt_required
 def vote_update():
@@ -191,24 +209,6 @@ def vote_update():
 	end_date = reqeust.form['end_date']
 
 	result = update_vote(user['user_id'], end_date)
-
-	return jsonify(result = result)
-
-#투표 삭제
-@BP.route('/vote_delete/<int:vote_id>')
-@jwt_required
-def vote_delete(vote_id):
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	#로그 기록
-	insert_log(g.db, user['user_id'], request.url_rule)
-	
-	#관리자 아니면 접근 거절!
-	if not check_admin(g.db, user['user_id']): 
-		abort(400)
-
-	result = delete_vote(g.db, vote_id, user['user_id'])
 
 	return jsonify(result = result)
 

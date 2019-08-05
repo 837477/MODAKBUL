@@ -6,7 +6,7 @@ from word_filter import *
 
 BP = Blueprint('analysis', __name__)
 
-#누적 통계 반환
+#누적 통계 반환 (OK)
 @BP.route('/today_analysis/<int:days>')
 @jwt_optional
 def visitor_analysis(days):
@@ -39,7 +39,7 @@ def visitor_analysis(days):
 
 	return jsonify(result)
 
-#포스트 좋아요 랭킹 반환
+#포스트 좋아요 랭킹 반환 (OK)
 @BP.route('/posts_like_rank/<int:days>')
 def posts_like_rank(days):
 	result = {}
@@ -52,7 +52,7 @@ def posts_like_rank(days):
 
 	return jsonify(result)
 
-#포스트 조회수 랭킹 반환
+#포스트 조회수 랭킹 반환 (OK)
 @BP.route('/posts_view_rank/<int:days>')
 def posts_view_rank(days):
 	result = {}
@@ -65,7 +65,7 @@ def posts_view_rank(days):
 
 	return jsonify(result)
 
-#투표 현황(진행중 / 완료) 반환
+#투표 현황(진행중 / 완료) 반환 (OK)
 @BP.route('/get_vote_status')
 def get_vote_status():
 	result = {}
@@ -90,7 +90,7 @@ def get_vote_status():
  
 	return jsonify(result)
 
-#해당 투표의 선택지 점유율
+#해당 투표의 선택지 점유율 (OK)
 @BP.route('/get_vote_select_status/<int:vote_id>')
 def get_vote_select_status(vote_id):
 	result = {}
@@ -117,7 +117,7 @@ def get_vote_select_status(vote_id):
 
 	return jsonify(result)
 
-#해당 질문의 선택지 현황 (유저 목록 반환)
+#해당 질문의 선택지 현황 (선택한 유저목록 및 단답형 대답 반환) (OK)
 @BP.route('/get_vote_select_status_user/<int:que_id>')
 @jwt_required
 def get_vote_select_status_user(que_id):

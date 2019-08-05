@@ -13,13 +13,36 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
 #######################################################
 #페이지 URL#############################################
-
-
-
+@BP.route('/v')
+def postpage():
+   return render_template('board/postpage.html')
 #######################################################
 #보드 / 포스트 반환#############################################
 
-#보드(메뉴) 목록 불러오기(ex 공지사항, 학생회비 사용내역 등)
+#보드(메뉴) 목록 디비 원본 (OK)
+@BP.route('/get_boards_origin')
+@jwt_required
+def get_boards_origin():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	result = {}
+	boards = select_boards(g.db)
+
+	result.update(
+		result = "success",
+		boards = boards)
+
+	return jsonify(result)
+
+#보드(메뉴) 목록 불러오기 (OK)
 @BP.route('/get_boards')
 @jwt_optional
 def get_boards():
@@ -55,7 +78,7 @@ def get_boards():
 
 	return jsonify(result)
 
-#보드(메뉴) 단일 정보 불러오기
+#보드(메뉴) 단일 정보 불러오기 (OK)
 @BP.route('/get_board/<string:board_url>')
 @jwt_optional
 def get_board(board_url):
@@ -118,7 +141,7 @@ def get_posts_page(tag_string, page):
 		#파일 개수 파악 시작!!
 		for file in db_files:
 			#이건 미리보기 파일이라 갯수에 포함X
-			if file['file_path'][0:2] != "S#":
+			if file['file_path'][0:2] != "S-":
 				#이미지냐? 아니면 일반파일이냐?
 				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
 					img_cnt += 1
@@ -382,7 +405,7 @@ def post_upload():
 
 		return jsonify(result = "success")
 
-#게시물 수정
+#게시물 수정 (OK)
 @BP.route('/post_update', methods=['POST'])
 @jwt_required
 def post_update():
@@ -439,7 +462,7 @@ def post_update():
 	return jsonify(
 		result = result)
 
-#게시물 삭제
+#게시물 삭제 (OK)
 @BP.route('/post_delete/<int:post_id>')
 @jwt_required
 def post_delete(post_id):
@@ -521,8 +544,6 @@ def comment_upload():
 	if comment_id == "0":
 		comment_id = None
 	
-	print("\n\n\n\n\n\n\n")
-
 	anony = int(anony)
 	#익명이냐?
 	if anony:

@@ -6,8 +6,8 @@ from db_func import *
 from word_filter import *
 
 BP = Blueprint('search', __name__)
-
-#검색!
+IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+#검색 (OK)
 @BP.route('/search/<string:topic>')
 def search(topic):
 	result = {}
@@ -38,7 +38,7 @@ def search(topic):
 		#파일 개수 파악 시작!!
 		for file in db_files:
 			#이건 미리보기 파일이라 갯수에 포함X
-			if file['file_path'].split('.')[-1] in IMG_EXTENSIONS and file['file_path'][0:2] != "S#":
+			if file['file_path'][0:2] != "S-":
 				#이미지냐? 아니면 일반파일이냐?
 				if file['file_path'].split('.')[-1] in IMG_EXTENSIONS: 
 					img_cnt += 1
