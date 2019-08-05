@@ -206,7 +206,7 @@ def change_logp():
 
 	return jsonify(result = "success")
 
-#부서 반환
+#부서 반환 (OK)
 @BP.route('/get_department/<int:dm_type>')
 def get_department(dm_type):
 	result = {}
@@ -355,6 +355,35 @@ def get_tags():
 	tag_list = []
 	for tag in tags:
 		if tag['tag_id'] != "ADMIN":
+			tag_list.append(tag['tag_id'])
+
+	result.update(
+		result = "success",
+		tags = tag_list)
+
+	return jsonify(result)
+
+#태그 목록 반환 (수정 / 삭제 불가능한 태그들은 제외한 리스트) (OK)
+@BP.route('/get_access_tags')
+@jwt_required
+def get_access_tags():
+	user = select_user(g.db, get_jwt_identity())
+	if user is None: abort(400)
+
+	#로그 기록
+	insert_log(g.db, user['user_id'], request.url_rule)
+
+	#관리자 아니면 접근 거절!
+	if not check_admin(g.db, user['user_id']): 
+		abort(400)
+
+	result = {}
+
+	tags = select_tags(g.db)
+
+	tag_list = []
+	for tag in tags:
+		if tag['tag_id'] not in ACCESS_DENIED_TAG:
 			tag_list.append(tag['tag_id'])
 
 	result.update(
@@ -625,7 +654,7 @@ def user_black_cancle():
 	return jsonify(
 		result = result)
 
-#관리자 비밀번호 변경
+#관리자 비밀번호 변경 (OK)
 @BP.route('/change_pw', methods=['POST'])
 @jwt_required
 def change_pw():
@@ -639,16 +668,16 @@ def change_pw():
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
-	before_pw = request.form['before_pw']
+	old_pw = request.form['old_pw']
 	new_pw_1 = request.form['new_pw_1']
 	new_pw_2 = request.form['new_pw_2']
 
 	if new_pw_1 != new_pw_2:
 		return jsonify(result = "not same pw")
 
-	if check_password_hash(user['pw'], before_PW):
-		result = update_user_pw(g.db, user['user_id'], generate_password_hash(new_pw))
+	if check_password_hash(user['pw'], old_pw):
+		result = update_user_pw(g.db, user['user_id'], generate_password_hash(new_pw_1))
 	else:
-		result = "wrong before pw"
+		result = "wrong old pw"
 
 	return jsonify(result = result)
