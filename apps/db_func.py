@@ -29,7 +29,7 @@ def select_user_search(db, search_topic):
 	with db.cursor() as cursor:
 		sql = "SELECT user_id, user_name, user_color FROM user WHERE (user_id = %s OR user_name = %s) AND (user_id != 'admin' AND user_id != 'anony');"
 		cursor.execute(sql, (search_topic, search_topic,))
-		result = cursor.fetchone()
+		result = cursor.fetchall()
 	return result
 
 #사용자 태그 추가
@@ -613,28 +613,45 @@ def update_variable(db, key, value):
 	return "success"
 
 #부서 등록
-def insert_department(db, dm_name, dm_chairman, dm_intro, dm_img, dm_type):
+def insert_department(db, dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type):
 	with db.cursor() as cursor:
-		sql = "INSERT INTO department(dm_name, dm_chairman, dm_intro, dm_img, dm_type) VALUES(%s, %s, %s, %s, %s);"
-		cursor.execute(sql, (dm_name, dm_chairman, dm_intro, dm_type,))
+		sql = "INSERT INTO department VALUES(%s, %s, %s, %s, %s, %s);"
+		cursor.execute(sql, (dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type,))
 	db.commit()
 
 	return "success"
 
-#부서 반환
-def select_department(db, dm_type):
+#부서 반환 (타입)
+def select_department_type(db, dm_type):
 	with db.cursor() as cursor:
-		sql = "SELECT * FROM department WHERE dm_type=%s;"
+		sql = "SELECT * FROM department WHERE dm_type=%s ORDER BY dm_id ASC;"
 		cursor.execute(sql, (dm_type,))
 		result = cursor.fetchall()
 	return result
 
-#부서 수정
+#부서 반환 (아이디로)
+def select_department_id(db, dm_id):
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM department WHERE dm_id=%s;"
+		cursor.execute(sql, (dm_id,))
+		result = cursor.fetchone()
+	return result
+
+#부서 수정(이미지 있는 상황)
 def update_department(db, dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type):
 	with db.cursor() as cursor:
 		sql = "UPDATE department SET dm_name = %s, dm_chairman = %s, dm_intro = %s, dm_img = %s, dm_type = %s WHERE dm_id = %s;"
-		cursor.execute(sql, (dm_id, dm_name, dm_chairman, dm_intro, dm_img, dm_type,))
-	dm.commit()
+		cursor.execute(sql, (dm_name, dm_chairman, dm_intro, dm_img, dm_type, dm_id,))
+	db.commit()
+
+	return "success"
+
+#부서 수정(이미지 없는 상황)
+def update_department_noneimg(db, dm_id, dm_name, dm_chairman, dm_intro, dm_type):
+	with db.cursor() as cursor:
+		sql = "UPDATE department SET dm_name = %s, dm_chairman = %s, dm_intro = %s, dm_type = %s WHERE dm_id = %s;"
+		cursor.execute(sql, (dm_name, dm_chairman, dm_intro, dm_type, dm_id, ))
+	db.commit()
 
 	return "success"
 
@@ -683,10 +700,10 @@ def delete_tag(db, tag):
 	return "success"
 
 #태그 수정
-def update_tag(db, tag):
-	with db.cursor as cursor:
+def update_tag(db, old_tag, new_tag):
+	with db.cursor() as cursor:
 		sql = "UPDATE tag SET tag_id = %s WHERE tag_id = %s;"
-		cursor.execute(sql, (tag,))
+		cursor.execute(sql, (new_tag, old_tag,))
 	db.commit()
 	return "success"
 

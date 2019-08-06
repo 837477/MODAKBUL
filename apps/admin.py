@@ -10,7 +10,7 @@ BP = Blueprint('admin', __name__)
 UPLOAD_IMG_PATH = "/static/image/"
 IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
-ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '외부사이트', '장부', '취업', '학생회소개'}
+ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '대외활동', '외부사이트', '장부', '취업', '학생회소개'}
 ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동', '대외활동_공모전', '대외활동_취업', '투표', '장부']
 #######################################################
 #관리자 기능#############################################
@@ -211,7 +211,7 @@ def change_logp():
 def get_department(dm_type):
 	result = {}
 
-	department = select_department(g.db, dm_type)
+	department = select_department_type(g.db, dm_type)
 
 	result.update(
 		department = department,
@@ -219,53 +219,7 @@ def get_department(dm_type):
 
 	return jsonify(result)
 
-#부서 추가
-@BP.route('/department_upload', methods=['POST'])
-@jwt_required
-def department_upload():
-	user = select_user(g.db, get_jwt_identity())
-	if user is None: abort(400)
-
-	#로그 기록
-	insert_log(g.db, user['user_id'], request.url_rule)
-
-	#관리자 아니면 접근 거절!
-	if not check_admin(g.db, user['user_id']): 
-		abort(400)
-
-	dm_name = request.form['dm_name']
-	dm_chairman = request.form['dm_chairman']
-	dm_intro = request.form['dm_intro']
-	dm_type = request.form['dm_type']
-	dm_img = request.files['dm_img']
-
-	#욕 필터
-	if check_word_filter(dm_name):
-		return jsonify(result = "unavailable word")
-	if check_word_filter(dm_chairman):
-		return jsonify(result = "unavailable word")
-	if check_word_filter(dm_intro):
-		return jsonify(result = "unavailable word")
-
-	#확장자 및 파일이름길이 확인.
-	if secure_filename(dm_img.filename).split('.')[-1] in IMG_EXTENSIONS and len(dm_img.filename) < 240:
-		#파일이름 변경.
-		img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_dm_img_' + dm_img.filename
-
-		result = update_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
-
-		#디비 저장 성공이면,
-		if result == "success":
-			#파일 저장
-			dm_img.save('.' + UPLOAD_IMG_PATH + img_name)
-		else:
-			return jsonify(result = "file save fail")
-	else:
-		return jsonify(result = "wrong extension")
-
-	return jsonify(result = "success")
-
-#부서 수정
+#부서 추가 / 수정 (프론트 구조상) (OK)
 @BP.route('/department_update', methods=['POST'])
 @jwt_required
 def department_update():
@@ -284,8 +238,7 @@ def department_update():
 	dm_chairman = request.form['dm_chairman']
 	dm_intro = request.form['dm_intro']
 	dm_type = request.form['dm_type']
-	dm_img = request.files['dm_img']
-
+	dm_img = request.files.getlist('dm_img')
 
 	#욕 필터
 	if check_word_filter(dm_name):
@@ -295,28 +248,41 @@ def department_update():
 	if check_word_filter(dm_intro):
 		return jsonify(result = "unavailable word")
 
-	#확장자 및 파일이름길이 확인.
-	if secure_filename(dm_img.filename).split('.')[-1] in IMG_EXTENSIONS and len(dm_img.filename) < 240:
-		#파일이름 변경.
-		img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_dm_img_' + dm_img.filename
+	if dm_img:
+		dm_img = dm_img[0]
+		#확장자 및 파일이름길이 확인.
+		if secure_filename(dm_img.filename).split('.')[-1] in IMG_EXTENSIONS and len(dm_img.filename) < 240:
+			#파일이름 변경.
+			img_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_dm_img_' + dm_img.filename
 
-		result = update_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
+			#이게 있는 부서인지 확이 후, 있으면 update / 없으면 insert (프론트 구조상 통합)
+			if select_department_id(g.db, dm_id) is not None:
+				result = update_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
+			else:
+				result = insert_department(g.db, dm_id, dm_name, dm_chairman, dm_intro, img_name, dm_type)
 
-		#디비 저장 성공이면,
-		if result == "success":
-			#파일 저장
-			dm_img.save('.' + UPLOAD_IMG_PATH + img_name)
+			#디비 저장 성공이면,
+			if result == "success":
+				#파일 저장
+				dm_img.save('.' + UPLOAD_IMG_PATH + img_name)
+			else:
+				return jsonify(result = "file save fail")
 		else:
-			return jsonify(result = "file save fail")
+			return jsonify(result = "wrong extension")
+
 	else:
-		return jsonify(result = "wrong extension")
+		#이게 있는 부서인지 확이 후, 있으면 update / 없으면 insert (프론트 구조상 통합)
+		if select_department_id(g.db, dm_id) is not None:
+			result = update_department_noneimg(g.db, dm_id, dm_name, dm_chairman, dm_intro, dm_type)
+		else:
+			result = "img is not defined"
 
-	return jsonify(result = "success")
+	return jsonify(result = result)
 
-#부서 삭제
-@BP.route('/department_delete', methods=['POST'])
+#부서 삭제 (OK)
+@BP.route('/department_delete/<int:dm_id>')
 @jwt_required
-def department_delete():
+def department_delete(dm_id):
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
@@ -327,7 +293,9 @@ def department_delete():
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
 
-	dm_id = request.form['dm_id']
+	#삭제할 부서가 DB에 있나 확인
+	if select_department_id(g.db, dm_id) is None:
+		result = "department is not defined"
 
 	result = delete_department(g.db, dm_id)
 
@@ -392,7 +360,7 @@ def get_access_tags():
 
 	return jsonify(result)
 
-#태그 추가
+#태그 추가 (OK)
 @BP.route('/input_tag', methods=['POST'])
 @jwt_required
 def input_tag():
@@ -415,22 +383,22 @@ def input_tag():
 	check = re.compile('[^ ㄱ-ㅣ가-힣|a-z|0-9]+').sub('', tag)
 
 	#길이가 달라졌다?! = 특수문자 들어간거임
-	if len(tag) != len(cehck):
+	if len(tag) != len(check):
 		return jsonify(result = "do not use special characters")
 
 	#해당 태그가 DB에 없으면?
-	if check_tag(g.db, tag) is None:
+	if check_tag(g.db, tag) is not None:
 		insert_tag(g.db, tag)
 		result = "success"
 	else:
 		result = "already tag"
 
-	return jsonify(result)
+	return jsonify(result = result)
 
-#태그 삭제
+#태그 삭제 (OK)
 @BP.route('/delete_tag', methods=['POST'])
 @jwt_required
-def delete_tag():
+def delete_tag_():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
@@ -453,10 +421,10 @@ def delete_tag():
 
 	return jsonify(result = result)
 
-#태그명 수정
+#태그명 수정 (OK)
 @BP.route('/update_tag', methods=['POST'])
 @jwt_required
-def update_tag():
+def update_tag_():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
@@ -468,7 +436,7 @@ def update_tag():
 		abort(400)
 
 	old_tag = request.form['old_tag']
-	old_tag = request.form['new_tag']
+	new_tag = request.form['new_tag']
 
 	#욕 필터
 	if check_word_filter(new_tag):
@@ -480,17 +448,17 @@ def update_tag():
 	if len(new_tag) != len(check):
 		return jsonify(result = "do not use special characters")
 
-	#이 접근 불가 태그 검사
-	if tag in ACCESS_DENIED_TAG: abort(400)
+	#접근 불가 태그 검사
+	if old_tag in ACCESS_DENIED_TAG: abort(400)
 
-	if check_tag(g.db, new_tag) is None:
+	if check_tag(g.db, old_tag) is None:
 		result = "tag is not define"
 	else:
-		result = update_tag(g.db, new_tag)
+		result = update_tag(g.db, old_tag, new_tag)
 
 	return jsonify(result = result)
 
-#로그 검색
+#로그 검색 (미사용)
 @BP.route('/search_log', methods=['POST'])
 @jwt_required
 def search_log():
@@ -508,7 +476,7 @@ def search_log():
 	
 	input_str = request.form['input_str']
 
-	topic_list = input_str.split('_')
+	topic_list = input_str.split(' ')
 
 	result_log = select_log(g.db, topic_list)
 
@@ -559,17 +527,18 @@ def get_user_search():
 
 	search = request.form['search']
 
-	user = select_user_search(g.db, search)
+	user_list = select_user_search(g.db, search)
 
 	if user is None:
 		return jsonify(result = "user is not defined")
 
-	tags = select_user_tag(g.db, user['user_id'])
+	for user in user_list:
+		tags = select_user_tag(g.db, user['user_id'])
+		user.update(tags = tags)
 
 	return jsonify(
 		result = "success",
-		user = user,
-		user_tags = tags)
+		user = user_list)
 
 #블랙리스트 반환 (OK)
 @BP.route('/get_blacklist')

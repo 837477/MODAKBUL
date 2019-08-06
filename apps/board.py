@@ -580,7 +580,7 @@ def comment_delete(comment_id):
 #파일 이름 변환
 def file_name_encode(file_name):
 	#허용 확장자 / 길이인지 확인.
-	if secure_filename(file_name).split('.')[-1] in ALLOWED_EXTENSIONS and len(file_name) < 240:
+	if secure_filename(file_name).split('.')[-1].lower() in ALLOWED_EXTENSIONS and len(file_name) < 240:
 
 		#원본 파일!
 		path_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_' + file_name
@@ -588,7 +588,7 @@ def file_name_encode(file_name):
 		#이미지 리사이즈 파일!
 		path_name_S = None
 
-		if secure_filename(file_name).split('.')[-1] in IMG_EXTENSIONS:
+		if secure_filename(file_name).split('.')[-1].lower() in IMG_EXTENSIONS:
 			path_name_S = 'S-' + path_name 
 
 		return {"original": path_name, "resize_s": path_name_S}

@@ -216,7 +216,7 @@ def vote_update():
 #함수 ##################################################
 def file_name_encode(file_name):
 	#허용 확장자 / 길이인지 확인.
-	if secure_filename(file_name).split('.')[-1] in IMG_EXTENSIONS and len(file_name) < 240:
+	if secure_filename(file_name).split('.')[-1].lower() in IMG_EXTENSIONS and len(file_name) < 240:
 
 		#이름 변환!
 		path_name = str(datetime.today().strftime("%Y%m%d%H%M%S%f")) + '_' + file_name
