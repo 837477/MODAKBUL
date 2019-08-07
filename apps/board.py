@@ -15,19 +15,41 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 #페이지 URL#############################################
 @BP.route('/board/')
 def board():
-   return render_template('board/board.html')
+	today = select_today_visitor(g.db)
+	if request.remote_addr not in today:
+		insert_today_visitor(g.db, request.remote_addr)
+
+	return render_template('board/board.html')
 
 @BP.route('/gallery')
 def gallery():
-   return render_template('board/image.html')
+	today = select_today_visitor(g.db)
+
+	if request.remote_addr not in today:
+		#방문자 기록
+		insert_today_visitor(g.db, request.remote_addr)
+
+	return render_template('board/image.html')
 
 @BP.route('/intro')
 def intro():
-   return render_template('board/intro.html')
+	today = select_today_visitor(g.db)
+
+	if request.remote_addr not in today:
+		#방문자 기록
+		insert_today_visitor(g.db, request.remote_addr)
+
+	return render_template('board/intro.html')
 
 @BP.route('/v')
 def postpage():
-   return render_template('board/postpage.html')
+	today = select_today_visitor(g.db)
+
+	if request.remote_addr not in today:
+		#방문자 기록
+		insert_today_visitor(g.db, request.remote_addr)
+
+	return render_template('board/postpage.html')
 #######################################################
 #보드 / 포스트 반환#############################################
 
@@ -288,7 +310,7 @@ def get_post(post_id):
 
 	return jsonify(result)
 
-#단일 포스트 불러오기(포스트 정보 가져오는 함) (OK)
+#단일 포스트 불러오기(포스트 정보 가져오는 함수) (OK)
 def get_post_func(post_id):
 	result = {}
 	post = select_post(g.db, post_id)
@@ -395,13 +417,9 @@ def post_upload():
 		#첨부할 파일이 있는지 확인
 		if files:
 			for file in files:
-				
-				#확장자 검사 후,
-				#허용불가 확장자면 None!
-				#허용이면, 딕셔너리 형태로
-				#원본, 리사이즈 이름을 반환
 				allow_check = file_name_encode(file.filename)
 
+				#확장자 및 파일네임 길이 검사
 				if allow_check is not None:
 					#DB에 파일 추가.
 					path_result = insert_attach(g.db, post_id, allow_check['original'], allow_check['resize_s'])

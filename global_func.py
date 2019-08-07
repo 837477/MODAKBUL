@@ -38,11 +38,24 @@ def modakbul_crawler():
 	#크롤러 취업 글들
 	crawl_employment = []
 
+	#크롤러 공모전 타이틀 리스트
+	crawl_competition_title = []
+	#크롤러 취업 글들
+	crawl_employment_title = []
+
 	for post in crawl_posts:
+		#공모전 글
 		if '공모전' in post['tag']:
-			crawl_competition.append(post)
+			#현재 공모전 제목 리스트에 이미 있는지 확인
+			if post['title'] not in crawl_competition_title:
+				crawl_competition.append(post)
+				crawl_competition_title.append(post['title'])
+		#취업 글
 		else:
-			crawl_employment.append(post)
+			#현재 취업 제목 리스트에 이미 있는지 확인
+			if post['title'] not in crawl_employment_title:
+				crawl_employment.append(post)
+				crawl_employment_title.append(post['title'])
 	
 	#DB 공모전 글들
 	competition_sql = select_tag_in_posts(['공모전'])

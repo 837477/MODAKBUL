@@ -104,10 +104,10 @@ def change_user_color(db, user_id, color):
 	db.commit()
 	return "success"
 
-#사용자 리스트 반환
+#전체 사용자 리스트 반환
 def select_user_list(db):
 	with db.cursor() as cursor:
-		sql = "SELECT user_id, user_name, user_color FROM user;"
+		sql = "SELECT user_id, user_name, user_color FROM user WHERE (user_id != 'admin' AND user_id != 'anony');"
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -786,7 +786,7 @@ def reset_today_visitor(db):
 #전체 방문자 수 반환
 def select_everyday_visitor_total(db):
 	with db.cursor() as cursor:
-		sql = "SELECT SUM(visitor_cnt) AS total FROM everyday_analysis;"
+		sql = "SELECT IFNULL(SUM(visitor_cnt), 0) AS total FROM everyday_analysis;"
 		cursor.execute(sql)
 		result = cursor.fetchone()
 

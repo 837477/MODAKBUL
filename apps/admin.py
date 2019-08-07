@@ -16,7 +16,13 @@ ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대�
 #페이지 URL#############################################
 @BP.route('/settings')
 def settings():
-   return render_template('admin/settings.html')
+	today = select_today_visitor(g.db)
+
+	if request.remote_addr not in today:
+		#방문자 기록
+		insert_today_visitor(g.db, request.remote_addr)
+
+	return render_template('admin/settings.html')
 #######################################################
 #관리자 기능#############################################
 
@@ -464,24 +470,22 @@ def update_tag_():
 	return jsonify(result = result)
 
 #로그 검색 (미사용)
-@BP.route('/search_log/<string:input_str>')
-#@jwt_required
-def search_log(input_str):
-	'''
+@BP.route('/search_log', methods=['POST'])
+@jwt_required
+def search_log():
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
 	#로그 기록
 	insert_log(g.db, user['user_id'], request.url_rule)
-
+	
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
-	'''
 
 	result = {}
 	
-	#input_str = request.form['input_str']
+	input_str = request.form['input_str']
 
 	topic_list = input_str.split('_')
 
@@ -493,7 +497,7 @@ def search_log(input_str):
 
 	return jsonify(result)
 
-#총 회원 반환 (미사용)
+#총 회원 반환 (OK)
 @BP.route('/get_user_list')
 @jwt_required
 def get_user_list():
@@ -504,7 +508,7 @@ def get_user_list():
 	#로그 기록
 	insert_log(g.db, user['user_id'], request.url_rule)
 
-	#관리자 계정이 아니면 ㅃ2
+	#관리자 계정 확인
 	if not check_admin(g.db, user['user_id']):
 		return jsonify(result = "you are not admin")
 
@@ -515,7 +519,7 @@ def get_user_list():
 		user.update(user_tags = tags)
 
 	return jsonify(
-		result = "result",
+		result = "success",
 		user_list = user_list)
 
 #특정 회원 반환 (OK)

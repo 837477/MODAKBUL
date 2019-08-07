@@ -13,7 +13,13 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 #페이지 URL#############################################
 @BP.route('/vote')
 def vote():
-   return render_template('vote/vote.html')
+	today = select_today_visitor(g.db)
+
+	if request.remote_addr not in today:
+		#방문자 기록
+		insert_today_visitor(g.db, request.remote_addr)
+		
+	return render_template('vote/vote.html')
 #######################################################
 #투표 기능###############################################
 
