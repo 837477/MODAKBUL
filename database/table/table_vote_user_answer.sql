@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS vote_user_answer(
 answer_id INT NOT NULL AUTO_INCREMENT,
 vote_id INT NOT NULL,
 que_id INT NOT NULL,
-select_id INT NOT NULL,
+select_id INT NULL,
 user_id VARCHAR(20) NULL,
 answer VARCHAR(500) NULL DEFAULT NULL,
 PRIMARY KEY(answer_id),

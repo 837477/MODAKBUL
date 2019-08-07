@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>세종대학교 소프트웨어융합대학</title>
+    <meta name="keywords" content="세종대학교,소프트웨어융합대학,소융대">
+    <meta name="author" content="Team IML">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <!-- 모바일 브라우저 상태바 컬러 -->
+    <meta name="theme-color" content="white">
+    <!-- 모닥불 shortcut 아이콘 -->
+    <link rel="icon" type="image/png" href="/static/image/SoftwareLOGO.png">
+    <link rel="apple-touch-icon-precomposed" type="image/png" href="/static/image/SoftwareLOGO.png">
+    <!-- 아이콘 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+    <!--CSS-->
+    <link href="/static/css/style.min.css" rel="stylesheet">
+    <!--side menu-->
+    <link rel="stylesheet" type="text/css" href="/static/css/sidemenu/demo.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/sidemenu/component.css" />
+    <!--fire animation css-->
+    <link rel="stylesheet" type="text/css" href="/static/css/fire.css">
+    <!--animation css-->
+    <link rel="stylesheet" type="text/css" href="/static/css/animation/animate.css">
+    <!--color-->
+    <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+    <!--post_menu_button-->
+    <link rel="stylesheet" type="text/css" href="/static/css/post_menu_button.css">
+    <!--custom css-->
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/settings.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+
+
+
+<body class="M_white_theme" onload="setTheme(); settingsPage_check_admin(); get_user_info(); change_setting_theme();">
+<!--Side Menu : necessary-->
+<div id="M_nav_container" class="container M_sidemenu">
+    <ul id="gn-menu" class="gn-menu-main M_boxshadow">
+       <!--nav bar 메인 로고-->
+            <div id="logo_change_target_logo" class="M_nav_bar_logo_container display_none_important" onclick="location.href='/'" onmouseenter="EE_change_logo_to_fire($(this))" onmouseleave="EE_return_logo()">
+                <div class="M_nav_bar_logo_image">
+                    <img id="M_nav_bar_logo_image_img" src="#" class="M_nav_bar_logo_image_img">
+                </div>
+            </div>
+            <a id="logo_change_target_fire" class="fir_all_contain display_none_important" href="/" onmouseenter="EE_chage_logo_to_logo($(this))"  onmouseleave="EE_return_logo()">
+                <div class = "fire_container">
+                    <div class = "fire_flame" id = "flame-2"></div>
+                    <div class = "fire_flame" id = "flame-1"></div>
+                    <div class = "fire_flame" id = "flame-3"></div>
+                    <div class = "fire_small-element"></div>
+                    <div class = "fire_small-element"></div>
+                    <div class = "fire_fire-bottom">
+                        <div class = "fire_main-fire"></div>
+                    </div>
+                    <div class = "fire_wood" id = "wood-1"></div>
+                    <div class = "fire_wood" id = "wood-2"></div>
+                </div>
+                <div id="M_fire_logo" class="fire_logo">MODAKBUL</div>
+            </a>
+        <!--사이드 메뉴-->
+        <li class="gn-trigger">
+            <a id="M_gn-icon" class="gn-icon gn-icon-menu" style="padding-left : 20px"><span>Menu</span></a>
+            <nav id="gn-menu-wrapper" class="gn-menu-wrapper M_boxshadow_sidemenu">
+                <div id="gn-scroller" class="gn-scroller">
+                </div>
+            </nav>
+        </li>
+        <!--검색버튼-->
+        <li onclick="M_search_bar_on()">
+            <a><i id="M_search_icon" class="fas fa-search"></i></a>
+            <div id="M_search_bar" class="M_search_bar wow display_none" data-wow-duration = "0.4s">
+                <input id="M_search_input" type="text" name="search_about" autocomplete="off" onkeyup="search_enter()">
+            </div>
+        </li>
+        <!--유저버튼-->
+        <li id="M_nav_user" class="gn-trigger" onclick="M_dropdown_user()">
+            <a><i class="fas fa-user" style="padding: 0 10px;"></i></a>
+            <!--로그인시-->
+            <div id="M_nav_user_login" class="M_nav_user M_boxshadow_user display_none">
+                <div>
+                    <div class="M_user_img_container">
+                        <div id="M_user_img" class="M_user_img" onclick="user_color_select_page_open()"><i class="fas fa-cog"></i></div>
+                    </div>
+                    <div class="M_user_info_container">
+                        <h4 id="M_user_content_name">Welcome</h4>
+                        <p id="M_user_content_major" class="M_user_introduce" style="height: auto;">To</p>
+                        <p id="M_user_content_number" class="M_user_introduce">Soyung</p>
+                    </div>
+                </div>
+                <div class="M_nav_border"></div>
+                <a class="M_nav_user_button" onclick="user_logout()">로그아웃</a>
+                <div class="M_nav_border"></div>
+                <a class="M_nav_user_button" onclick="changeTheme(); change_setting_theme();"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+            </div>
+            <!--비로그인시-->
+            <div id="M_nav_user_nologin" class="M_nav_user M_boxshadow_user M_nav_user_nologin display_none">
+                <a class="M_nav_user_button" href="/sign-in">로그인</a>
+                <div class="M_nav_border"></div>
+                <a class="M_nav_user_button" onclick="changeTheme(); change_setting_theme();"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+            </div>
+        </li>
+    </ul>
+</div>
+<!--color div-->
+<div id="M_user_color_selector_container_modal" class="M_user_color_selector_container_modal display_none"></div>
+<div id="M_user_color_selector_container" class="M_info_div M_boxshadow M_user_color_selector_container animated display_none wow" data-wow-duration = "0.4s">
+    <div id="M_user_color_selected_label" class="user_color_selected_change M_user_color_selected_label"></div>
+    <div id="colorpicker_wrapper" class="M_colorpicker_wrapper">
+        <div id="colorpicker"></div>
+    </div>
+    <div class="user_color_selector_info_container">
+        <div class="user_color_selector_info_title M_font_bold">미리보기</div>
+        <div class="M_info_div M_boxshadow">
+            <div class="user_color_selector_info_content">
+                <div class="user_color_selector_info_content_label user_color_selected_change"></div>
+                <div id="user_color_selector_info_content_name" class="user_color_selector_info_content_name"></div>
+            </div>
+        </div>
+    </div>
+    <div class="M_user_color_select_choice_container">
+        <div class="M_user_color_select_choice" onclick="user_color_select_ok()" style="border-right: 1px solid #e2e2e2">적용</div>
+        <div class="M_user_color_select_choice" onclick="user_color_select_cancel()">취소</div>
+    </div>
+</div>
+<!--Body-->
+<div class="M_body">
+    <div class="M_settings_nav">
+        <div class="M_settings_nav_content" onclick="toggle(0)">
+            학생회 정보
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(1)">
+            회장단 소개
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(2)">
+            국장 소개
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(3)">
+            사용자 관리
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(4)">
+            메뉴 관리
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(5)">
+            태그 관리
+        </div>
+        <div class="M_settings_nav_content" onclick="toggle(6)">
+            비밀번호
+        </div>
+    </div>
+    <div class="M_setting M_info">
+            <div onclick="submit_bio()" class="M_setting_submit">
+                <i class="far fa-check-circle"></i>
+            </div>
+        <div class="M_settings_title">
+            # 학생회 정보
+        </div>
+        <div class="M_logo_wrapper">
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    로고 변경
+                </div>
+            </div>
+            <img id="M_image_preview" onclick="upload_logo()" src="#" class="M_setting_logo_image">
+            <input type="file" id="M_logo_upload" style="display: none;">
+            <div class="M_image_warning">
+                로고는 160x160 사이즈로 업로드해주시기 바랍니다.
+            </div>
+        </div>
+        <div class="M_union_info_wrapper">
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    학생회 이름
+                </div>
+            </div>
+            <div>
+                <input id="M_union_name"class="M_union_info_input" type="text">
+            </div>
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    메인페이지 학생회 부제
+                </div>
+            </div>
+            <div>
+                <input id="M_union_subtitle" class="M_union_info_input" type="text">
+            </div>
+        </div>
+        <div class="M_settings_subtitle_wrapper">
+            <div class="M_setting_tag"></div>
+            <div class="M_setting_subtitle">
+                총 인사말
+            </div>
+            <div class="M_union_info_wrapper_introduce">
+               <textarea id="M_union_info_wrapper_introduce_textarea" class="M_union_info_wrapper_introduce_textarea" placeholder="총 인사말을 입력해주세요."></textarea>
+            </div>
+        </div>
+        <div class="M_settings_subtitle_wrapper">
+            <div class="M_setting_tag"></div>
+            <div class="M_setting_subtitle">
+                연락처
+            </div>
+            <div class="M_union_info_wrapper_introduce">
+               <textarea id="M_union_info_wrapper_phonenumber_textarea" class="M_union_info_wrapper_phonenumber_textarea" placeholder="연락처를 입력해주세요."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: none;" class="M_setting M_principle_bio">
+        <div onclick="update_bio(0)" class="M_setting_submit">
+            <i class="far fa-check-circle"></i>
+        </div>
+        <div class="M_settings_title">
+            # 회장단 소개
+        </div>
+        <!--여기 target 에 append 시키면됨-->
+        <div id="M_student_introduce_target">
+
+            
+            <!--여기서부터-->
+            <!--여기까지-->
+
+
+        </div>
+    </div>
+
+    <div style="display: none;" class="M_setting M_bio">
+        <div onclick="update_bio(1)" class="M_setting_submit">
+            <i class="far fa-check-circle"></i>
+        </div>
+        <div class="M_settings_title">
+            # 국장 소개
+        </div>
+        <!--여기 target 에 append 시키면됨-->
+        <div id="M_student_introduce_target_2">
+
+
+            <!--여기서부터-->
+            <!--여기까지-->
+
+
+        </div>
+        <div class="M_setting_introduce_plus_button_container">
+            <div onclick="add_intro()" class="M_setting_introduce_plus_button">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: none;" class="M_setting M_user">
+        <div class="M_settings_title">
+            # 사용자 관리
+        </div>
+        <div class = M_left_settings>
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    사용자 검색
+                </div>
+            </div>
+            <div class="M_user_search_wrapper">
+                <input class="M_user_search" type="text" placeholder="홍길동" autocomplete="off">
+                <div onclick="search_user()" class="M_user_search_button">
+                    <i style="margin-left: 3%;" class="fas fa-search"></i>
+                </div>
+                <div>* 학번 혹은 이름으로 검색해주세요.</div>
+            </div>
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    사용자 정보
+                </div>
+            </div>
+            <div class="M_setting_line"></div>
+            <div id="M_user_info" class="M_user_info">
+            </div>
+        </div>
+
+        <div class = "M_right_settings">
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    블랙리스트 목록
+                </div>
+            </div>
+                <div class="M_setting_line"></div>
+
+                <div class="M_setting_blacklist">
+                </div>
+        </div>
+    </div>
+
+    <div style="display: none;" class="M_setting M_menu">
+        <div onclick="nav_submit()" class="M_setting_submit">
+                <i class="far fa-check-circle"></i>
+            </div>
+        <div class="M_settings_title">
+            # 메뉴 관리
+        </div>
+        <div class="M_nav_list">
+            <div id="M_sortable_list">
+            </div>
+        </div>
+         
+        <div class="M_nav_add_wrapper">
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    메뉴 추가
+                </div>
+            </div>
+            <div class="M_setting_line" style="margin-bottom:5px"></div>
+            <div class="M_settings_subtitle_wrapper2">
+                <span class="CB_title_for_writing">글쓰기 권한(관리자만)</span>
+                <label class="CB_switch">
+                    <input id="admin_access_checkbox" type="checkbox">
+                    <span class="CB_slider CB_round"></span>
+                </label>
+            </div>
+            <div class="M_settings_subtitle_wrapper">
+                <div class="M_setting_tag">
+                </div>
+                <div class="M_setting_subtitle">
+                    태그 선택
+                </div>
+            </div>
+            <div class="M_nav_add">
+            </div>
+            <div>
+                <input id="M_new_board_name" class="M_new_board_name" type="text" placeholder="게시판 이름을 입력하세요.">
+            </div>
+            <div onclick="create_board()" class="M_nav_submit">
+                생성
+            </div>
+        </div>
+    </div>
+
+    <div style="display: none;" class="M_setting M_tag">
+        <div class="M_settings_title">
+            # 태그 관리
+        </div>
+        <div class="M_settings_subtitle_wrapper">
+            <div class="M_setting_tag">
+            </div>
+            <div class="M_setting_subtitle">
+                태그 관리
+            </div>
+        </div>
+        <div class="M_tag_list">
+            <!--Tag list input target-->
+        </div>
+        <div class="M_setting_introduce_plus_button_container">
+            <div onclick="plus_tag_button()" class="M_setting_introduce_plus_button">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+        </div>
+        <div class=""></div>
+    </div>
+
+    <div style="display: none" class="M_setting M_password">
+        <div onclick="change_password()" class="M_setting_submit">
+            <i class="far fa-check-circle"></i>
+        </div>
+        <div class="M_settings_title">
+            # 비밀번호 변경
+        </div>
+        <div class="M_settings_subtitle_wrapper">
+            <div class="M_setting_tag">
+            </div>
+            <div class="M_setting_subtitle">
+                비밀번호변경
+            </div>
+        </div>
+        <div class="M_password_line"></div>
+        <div class="M_password_wrapper">
+            <div class="M_password_info">
+                이전 비밀번호
+            </div>
+            <input id="prev_pw" class="M_password_input" type="password">
+        </div>
+        <div class="M_password_wrapper">
+            <div class="M_password_info">
+                새 비밀번호
+            </div>
+            <input id="new_pw" class="M_password_input" type="password">
+        </div>
+        <div class="M_password_wrapper">
+            <div class="M_password_info">
+                새 비밀번호 확인
+            </div>
+            <input id="new_pw_confirm" class="M_password_input"  type="password">
+        </div>
+    </div>
+</div>
+</body>
+
+
+
+<!-- JQuery JS -->
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<!-- Identification JS -->
+<script src="/static/js/pnglib.js"></script>
+<!-- AJAX JS -->
+<script src="/static/js/ajax.js"></script>
+<!-- Snackbar JS -->
+<script src="/static/js/snackbar.js"></script>
+<!--side menu-->
+<script src="/static/js/sidemenu/modernizr.custom.js"></script>
+<script src="/static/js/sidemenu/classie.js"></script>
+<script src="/static/js/sidemenu/gnmenu.js"></script>
+<script src="/static/js/sidemenu/dropdown.js"></script>
+<script>new gnMenu( document.getElementById( 'gn-menu' ) );</script>
+<!--animation-->
+<script src="/static/js/scroll/wow.min.js"></script>
+<script>new WOW().init();</script>
+<!--user color JS-->
+<script src="/static/js/color/jquery.colorpicker.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/color/usercolor.js"></script>
+<!--post_menu_button JS-->
+<script src="/static/js/post_menu_button.js"></script>
+<!--multifile JS-->
+<script src="/static/js/multifile/jquery.MultiFile.min.js"></script>
+<!--custom JS-->
+<script src="/static/js/test_url.js"></script>
+<script src="/static/js/login.js"></script>
+<script src="/static/js/themeChange.js"></script>
+<script src="/static/js/sidebar.js"></script>
+<script src="/static/js/setting.js"></script>
+<script src="/static/js/drag_drop.js"></script>
+<script src="/static/js/navigation.js"></script>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>세종대학교 소프트웨어융합대학</title>
+	<meta name="keywords" content="세종대학교,소프트웨어융합대학,소융대">
+	<meta name="author" content="Team IML">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1 user-scalable=no">
+	<!-- 모바일 브라우저 상태바 컬러 -->
+	<meta name="theme-color" content="white">
+	<!-- 모닥불 shortcut 아이콘 -->
+	<link rel="icon" type="image/png" href="/static/image/SoftwareLOGO.png">
+	<link rel="apple-touch-icon-precomposed" type="image/png" href="/static/image/SoftwareLOGO.png">
+	<!-- 아이콘 -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+	<!--CSS-->
+	<link href="/static/css/style.min.css" rel="stylesheet">
+	<!--side menu-->
+	<link rel="stylesheet" type="text/css" href="/static/css/sidemenu/demo.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/sidemenu/component.css" />
+	<!--fire animation css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/fire.css">
+	<!--animation css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/animation/animate.css">
+	<!--color-->
+	<link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+	<!--google analytics JS-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js" integrity="sha256-qSIshlknROr4J8GMHRlW3fGKrPki733tLq+qeMCR05Q=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js" integrity="sha256-xKeoJ50pzbUGkpQxDYHD7o7hxe0LaOGeguUidbq6vis=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.css" integrity="sha256-IvM9nJf/b5l2RoebiFno92E5ONttVyaEEsdemDC6iQA=" crossorigin="anonymous" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js" integrity="sha256-arMsf+3JJK2LoTGqxfnuJPFTU4hAK57MtIPdFpiHXOU=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" integrity="sha256-aa0xaJgmK/X74WM224KMQeNQC2xYKwlAt08oZqjeF0E=" crossorigin="anonymous" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
+	<!--custom css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+</head>
+
+<!--body-->
+<body class="M_white_theme" onload="setTheme(); get_user_info(); statistics();">
+	<!--Side Menu : necessary-->
+	<div id="M_nav_container" class="container M_sidemenu">
+		<ul id="gn-menu" class="gn-menu-main M_boxshadow">
+			<!--nav bar 메인 로고-->
+			<div id="logo_change_target_logo" class="M_nav_bar_logo_container display_none_important" onclick="location.href='/'" onmouseenter="EE_change_logo_to_fire($(this))" onmouseleave="EE_return_logo()">
+				<div class="M_nav_bar_logo_image">
+					<img id="M_nav_bar_logo_image_img" src="#" class="M_nav_bar_logo_image_img">
+				</div>
+			</div>
+        	<a id="logo_change_target_fire" class="fir_all_contain display_none_important" href="/" onmouseenter="EE_chage_logo_to_logo($(this))"  onmouseleave="EE_return_logo()">
+        	    <div class = "fire_container">
+        	        <div class = "fire_flame" id = "flame-2"></div>
+        	        <div class = "fire_flame" id = "flame-1"></div>
+        	        <div class = "fire_flame" id = "flame-3"></div>
+        	        <div class = "fire_small-element"></div>
+        	        <div class = "fire_small-element"></div>
+        	        <div class = "fire_fire-bottom">
+        	            <div class = "fire_main-fire"></div>
+        	        </div>
+        	        <div class = "fire_wood" id = "wood-1"></div>
+        	        <div class = "fire_wood" id = "wood-2"></div>
+        	    </div>
+        	    <div id="M_fire_logo" class="fire_logo">MODAKBUL</div>
+        	</a>
+			<!--사이드 메뉴-->
+			<li class="gn-trigger">
+				<a id="M_gn-icon" class="gn-icon gn-icon-menu" style="padding-left : 20px"><span>Menu</span></a>
+				<nav id="gn-menu-wrapper" class="gn-menu-wrapper M_boxshadow_sidemenu">
+					<div id="gn-scroller" class="gn-scroller">
+					</div>
+				</nav>
+			</li>
+			<!--검색버튼-->
+			<li onclick="M_search_bar_on()">
+				<a><i id="M_search_icon" class="fas fa-search"></i></a>
+				<div id="M_search_bar" class="M_search_bar wow display_none" data-wow-duration = "0.4s">
+					<input id="M_search_input" type="text" name="search_about" autocomplete="off" onkeyup="search_enter()">
+				</div>
+			</li>
+			<!--유저버튼-->
+			<li id="M_nav_user" class="gn-trigger" onclick="M_dropdown_user()">
+				<a><i class="fas fa-user" style="padding: 0 10px;"></i></a>
+				<!--로그인시-->
+				<div id="M_nav_user_login" class="M_nav_user M_boxshadow_user display_none">
+					<div>
+						<div class="M_user_img_container">
+							<div id="M_user_img" class="M_user_img" onclick="user_color_select_page_open()"><i class="fas fa-cog"></i></div>
+						</div>
+						<div class="M_user_info_container">
+							<h4 id="M_user_content_name">Welcome</h4>
+							<p id="M_user_content_major" class="M_user_introduce" style="height: auto;">To</p>
+							<p id="M_user_content_number" class="M_user_introduce">Soyung</p>	
+						</div>
+					</div>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="user_logout()">로그아웃</a>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="changeTheme(); statistics();"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+				</div>
+				<!--비로그인시-->
+				<div id="M_nav_user_nologin" class="M_nav_user M_boxshadow_user M_nav_user_nologin display_none">
+					<a class="M_nav_user_button" href="/sign-in">로그인</a>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="changeTheme(); statistics();"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+				</div>
+			</li>
+		</ul>
+	</div>
+	<!--color div-->
+	<div id="M_user_color_selector_container_modal" class="M_user_color_selector_container_modal display_none"></div>
+	<div id="M_user_color_selector_container" class="M_info_div M_boxshadow M_user_color_selector_container animated display_none wow" data-wow-duration = "0.4s">
+		<div id="M_user_color_selected_label" class="user_color_selected_change M_user_color_selected_label"></div>
+		<div id="colorpicker_wrapper" class="M_colorpicker_wrapper">
+       	 	<div id="colorpicker"></div>
+		</div>
+		<div class="user_color_selector_info_container">
+			<div class="user_color_selector_info_title M_font_bold">미리보기</div>
+			<div class="M_info_div M_boxshadow">
+				<div class="user_color_selector_info_content">
+					<div class="user_color_selector_info_content_label user_color_selected_change"></div>
+					<div id="user_color_selector_info_content_name" class="user_color_selector_info_content_name"></div>
+				</div>
+			</div>
+		</div>
+		<div class="M_user_color_select_choice_container">
+			<div class="M_user_color_select_choice" onclick="user_color_select_ok()" style="border-right: 1px solid #e2e2e2">적용</div>
+			<div class="M_user_color_select_choice" onclick="user_color_select_cancel()">취소</div>
+		</div>
+	</div>
+	<!--Real body-->
+	<div class="M_body" style="display: inline-block;">
+		<div class="M_statistics_time_container">
+			<div id="M_statistics_time_js" class="M_statistics_time"></div>
+		</div>
+		<div class="M_statistics_today_container">
+			<div class="M_statistics_today_title">오늘 방문자 수</div>
+			<p id="M_statistics_today_data" class="M_statistics_today_info">-</p>
+			<div class="M_statistics_today_title">전체 방문자 수</div>
+			<p id="M_statistics_today_all_data" class="M_statistics_today_info">-</p>
+		</div>
+		<div class="M_graph_box_container">
+			<!--Today vistior graph-->
+			<div id="M_statistics_graph_visitor_js" class="chart-container M_statistics_graph_all_css">
+				<canvas id="M_today_visitors_graph" width="auto" height="auto"></canvas>
+			</div>
+			<!--change button form two-->
+			<div class="M_statistics_button_container">
+				<button class="M_statistics_button_two" style="border-right: 1.5px solid #e2e2e2" onclick="visitor_post_graph('week', 'visitor')">일주일</button>
+				<button class="M_statistics_button_two" onclick="visitor_post_graph('month', 'visitor')">한달</button>
+			</div>
+		</div>
+		<div class="M_graph_box_container">
+			<!--Today post upload graph-->
+			<div id="M_statistics_graph_post_upload_js" class="chart-container M_statistics_graph_all_css">
+				<canvas id="M_today_post_upload_graph" width="auto" height="auto"></canvas>
+			</div>
+			<!--change button form two-->
+			<div class="M_statistics_button_container">
+				<button class="M_statistics_button_two" style="border-right: 1.5px solid #e2e2e2" onclick="visitor_post_graph('week', 'post')">일주일</button>
+				<button class="M_statistics_button_two" onclick="visitor_post_graph('month', 'post')">한달</button>
+			</div>
+		</div>
+		<div class="M_graph_box_container">
+			<!--like post graph-->
+			<div id="M_statistics_graph_like_js" class="chart-container M_statistics_graph_all_css">
+				<canvas id="M_today_post_like"width="auto" height="auto"></canvas>
+			</div>
+			<!--change button form three-->
+			<div class="M_statistics_button_container">
+				<button class="M_statistics_button" style="border-right: 1.5px solid #e2e2e2" onclick="draw_like_graph('today')">하루</button>
+				<button class="M_statistics_button" style="border-right: 1.5px solid #e2e2e2" onclick="draw_like_graph('week')">일주일</button>
+				<button class="M_statistics_button" onclick="draw_like_graph('month')">한달</button>
+			</div>
+		</div>
+		<div class="M_graph_box_container">
+			<!--view post graph-->
+			<div id="M_statistics_graph_view_js" class="chart-container M_statistics_graph_all_css">
+				<canvas id="M_today_post_view"width="auto" height="auto"></canvas>
+			</div>
+			<!--change button form three-->
+			<div class="M_statistics_button_container">
+				<button class="M_statistics_button" style="border-right: 1.5px solid #e2e2e2" onclick="draw_view_graph('today')">하루</button>
+				<button class="M_statistics_button" style="border-right: 1.5px solid #e2e2e2" onclick="draw_view_graph('week')">일주일</button>
+				<button class="M_statistics_button" onclick="draw_view_graph('month')">한달</button>
+			</div>
+		</div>
+		<div class="M_statistics_vote_list_container">
+			<div class=" M_statistics_vote_list_search">
+				<i class="fas fa-search M_statistics_vote_list_search_icon"></i>
+				<input type="text" class="M_statistics_vote_list_serach_input" autocomplete="off" placeholder="설문조사 명을 입력해주세요!" onkeyup="search_vote_analysistics($(this))">
+			</div>
+			<div id="M_statistics_vote_list_target" class="M_statistics_vote_list_target">
+
+			</div>
+		</div>
+	</div>
+	<!--vote modal-->
+	<div id="M_user_vote_modal_background" class="M_user_post_modal_background animated wow display_none" data-wow-duration = "0.4s">
+		<div id="M_user_vote_modal_container" class="M_info_div M_user_post_modal_container animated wow M_boxshadow display_none" data-wow-duration = "0.4s">
+			<div class="M_vote_top_container">
+				<div id="M_vote_profile_color" class="M_post_profile_color"></div>
+				<div id="M_vote_author" class="M_post_author"></div>
+				<div class="M_vote_date_container">
+					<div class="M_vote_date_title">기간 : </div>
+					<div id="M_vote_start_date" class="M_vote_time" style="margin-left: 5px"></div>
+					<span class="M_post_time"> ~ </span>
+					<div id="M_vote_end_date" class="M_vote_time"></div>
+				</div>
+			</div>
+			<div id="M_vote_top_title" class="M_vote_top_title" style="margin-top: 20px"></div>
+			<div id="M_vote_picture_container" class="M_vote_picture_container">
+				<img src="#" id="M_vote_picture" class="M_vote_picture" onclick="image_modal_open(this)">
+			</div>
+			<div id="M_vote_body" class="M_vote_body"></div>
+			<div class="M_post_body_line"></div>
+			<div id="M_vote_que_target" class="M_vote_que_target">
+				<!--question target point-->
+			</div>
+			<div class="M_post_body_line" style="margin: 10px 0"></div>
+			<div class="M_vote_body_icon_container">
+				<i class="fas fa-male M_vote_content_icon_footer"></i>
+				<span id="M_vote_body_icons_data" class="M_vote_body_icon_data"></span>
+			</div>
+			<div class="M_vote_empty_box"></div>
+		</div>
+	</div>
+	<!--Post modal-->
+	<div id="M_user_post_modal_background" class="M_user_post_modal_background animated wow display_none" data-wow-duration = "0.4s">
+		<div id="M_user_post_modal_container" class="M_info_div M_user_post_modal_container animated wow M_boxshadow display_none" data-wow-duration = "0.4s">
+			<div class="M_post_top_container">
+				<div id="M_post_profile_color" class="M_post_profile_color"></div>
+            	<div id="M_post_author" class="M_post_author"></div>
+            	<div id="M_post_time" class="M_post_time"></div>
+			</div>
+			<div id="M_post_top_heart" class="M_post_top_heart" onclick="post_like_button()"><i class="fas fa-heart"></i></div>
+			<div id="M_post_top_title" class="M_post_top_title"></div>
+			<div id="M_post_body" class="M_post_body"></div>
+			<div class="M_post_body_line"></div>
+			<div id="M_post_body_image_container" class="M_post_body_scroll_container">
+			</div>
+			<div id="M_post_body_attachment_container" class="M_post_body_scroll_container">
+			</div>
+			<div class="M_post_body_icon_container">
+				<i class="fas fa-eye M_post_body_icons"></i>
+				<span id="M_post_body_icons_view" class="M_post_body_icons_data"></span>
+				<i class="fas fa-heart M_post_body_icons"></i>
+				<span id="M_post_body_icons_like" class="M_post_body_icons_data"></span>
+				<i class="fas fa-comment M_post_body_icons"></i>
+				<span id="M_post_body_icons_comment" class="M_post_body_icons_data"></span>
+			</div>
+			<div class="M_post_body_share">
+				<i id="M_post_url_copy" class="fas fa-share-square" onclick="clipboardCopy(this)"></i>
+			</div>
+			<div class="M_post_body_line"></div>
+			<div id="comment_target">
+			</div>
+			<div class="M_comment_bottom_empty"></div>
+		</div>
+		<div id="M_post_user_comment_container" class="M_post_user_comment_container_fixed">
+			<div id="M_post_user_comment_anony_container" class="M_post_user_comment_anony_container">
+				<input id="M_post_user_comment_anony" class="M_post_user_comment_anony" class="M_post_user_comment_anony" type="checkbox">
+				익명
+			</div>
+			<input type="text" id="M_post_user_comment_input" class="M_post_user_comment_input" placeholder="댓글을 입력해주세요." onkeyup="comment_enter()" autocomplete="off">
+		</div>
+	</div>
+	<!--imagemodal-->
+	<div id="M_image_modal_background" class="M_image_modal_background display_none animated wow" onclick="image_modal_close()" data-wow-duration = "0.4s">
+		<img id="M_image_modal_container" src="/static/image/foot.png" class="M_image_modal_container" onclick="image_modal_close()">
+	</div>
+	<!--Page footer-->
+	<div class="M_footer M_static_footer">
+		<img src="/static/image/foot.png" class="M_footer_img">
+		<p class="M_footer_p">010-7393-3434 | sejong1sc@gmail.com | 학생회관 409호<br>COPYRIGHT ⓒ 2019 Team IML</p>
+	</div>
+</body>
+
+<!-- JQuery JS -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<!-- Identification JS -->
+<script src="/static/js/pnglib.js"></script>
+<!-- AJAX JS -->
+<script src="/static/js/ajax.js"></script>
+<!-- Snackbar JS -->
+<script src="/static/js/snackbar.js"></script>
+<!--side menu-->
+<script src="/static/js/sidemenu/modernizr.custom.js"></script>
+<script src="/static/js/sidemenu/classie.js"></script>
+<script src="/static/js/sidemenu/gnmenu.js"></script>
+<script src="/static/js/sidemenu/dropdown.js"></script>
+<script>new gnMenu( document.getElementById( 'gn-menu' ) );</script>
+<!--animation-->
+<script src="/static/js/scroll/wow.min.js"></script>
+<script>new WOW().init();</script>
+<!--user color JS-->
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
+<script src="/static/js/color/jquery.colorpicker.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/color/usercolor.js"></script>
+<!--post_menu_button JS-->
+<script src="/static/js/post_menu_button.js"></script>
+<!--custom JS-->
+<script src="/static/js/test_url.js"></script>
+<script src="/static/js/login.js"></script>
+<script src="/static/js/themeChange.js"></script>
+<script src="/static/js/board.js"></script>
+<script src="/static/js/sidebar.js"></script>
+<script src="/static/js/postmodal.js"></script>
+<script src="/static/js/historyback_statistics.js"></script>
+<script src="/static/js/statistics.js"></script>
+<script src="/static/js/navigation.js"></script>
+</html>

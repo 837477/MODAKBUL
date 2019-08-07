@@ -5,6 +5,13 @@ from db_func import *
 from word_filter import *
 
 BP = Blueprint('analysis', __name__)
+#######################################################
+#페이지 URL#############################################
+@BP.route('/statistics')
+def statistics():
+   return render_template('analysis/statistics.html')
+#######################################################
+#통계 관련3##############################################
 
 #누적 통계 반환 (OK)
 @BP.route('/today_analysis/<int:days>')
@@ -28,7 +35,9 @@ def visitor_analysis(days):
 
 	#전체 방문자 수 반환
 	total_visitor = select_everyday_visitor_total(g.db)
-	total = int(total_visitor['total'])
+	total = total_visitor['total']
+
+	total = int(total) + int(today)
 
 	result.update(
 			user_color = color,

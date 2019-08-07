@@ -204,7 +204,7 @@ def select_tag_in_posts(tag_list):
 #특정 태그가 속해있는 포스트 리스트 반환 (페이지네이션)
 def select_posts_page(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM v_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 
@@ -212,7 +212,7 @@ def select_posts_page(db, tag_in_post_id, page):
 #특정 태그가 속해있는 포스트 리스트 반환 (전체)
 def select_posts_list(db, tag_in_post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM V_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
+		sql = 'SELECT R.post_id AS post_id, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_title, post_date, post_view, like_cnt, comment_cnt, post_anony, post_secret, post_url_link, post_url_img FROM v_post V JOIN (' + tag_in_post_id + ') R ON V.post_id = R.post_id ORDER BY V.post_date DESC;'
 		cursor.execute(sql)
 		result = cursor.fetchall()
 	return result
@@ -220,7 +220,7 @@ def select_posts_list(db, tag_in_post_id):
 #포스트 단일 반환
 def select_post(db, post_id):
 	with db.cursor() as cursor:
-		sql = 'SELECT post_id, post_title, post_content, post_view, post_date, post_anony, post_secret, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_url_link, post_url_img FROM V_post WHERE post_id = %s;'
+		sql = 'SELECT post_id, post_title, post_content, post_view, post_date, post_anony, post_secret, comment_cnt, like_cnt, user_id AS author_id, user_name AS author_name, user_color AS author_color, post_url_link, post_url_img FROM v_post WHERE post_id = %s;'
 		cursor.execute(sql, (post_id,))
 		result = cursor.fetchone()
 
@@ -229,7 +229,7 @@ def select_post(db, post_id):
 #갤러리 포스트 미리보기 반환 (갤러리 전용, 페이지네이션)
 def select_gallery_posts(db, tag_in_post_id, page):
 	with db.cursor() as cursor:
-		sql = 'SELECT post.post_id, post_title FROM post JOIN (' + tag_in_post_id + ') R ON post.post_id = r.post_id LIMIT %s, %s;'
+		sql = 'SELECT post.post_id, post_title FROM post JOIN (' + tag_in_post_id + ') R ON post.post_id = R.post_id LIMIT %s, %s;'
 		cursor.execute(sql, ((page-1)*30, page*30))
 		result = cursor.fetchall()
 	return result
@@ -720,19 +720,20 @@ def insert_log(db, user_id, log_url):
 
 #로그 검색
 def select_log(db, topic_list):
-	sql = "SELECT * FROM log WHERE "
+	with db.cursor() as cursor:
+		sql = "SELECT * FROM log WHERE "
 
-	for  topic in topic_list:
-		add_sql = 'CONCAT(user_id, log_url, log_time) REGEXP '
-		sql += (add_sql + '"' + topic + '"')
+		for  topic in topic_list:
+			add_sql = 'CONCAT(user_id, log_url, log_time) REGEXP '
+			sql += (add_sql + '"' + topic + '"')
 
-		if topic != topic_list[-1]:
-			sql += ' AND '
-		else:
-			sql += ';'
+			if topic != topic_list[-1]:
+				sql += ' AND '
+			else:
+				sql += ';'
 
-	cursor.execute(sql)
-	result = cursor.fetchall()
+		cursor.execute(sql)
+		result = cursor.fetchall()
 
 	return result
 

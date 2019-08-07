@@ -13,6 +13,18 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 
 #######################################################
 #페이지 URL#############################################
+@BP.route('/board/')
+def board():
+   return render_template('board/board.html')
+
+@BP.route('/gallery')
+def gallery():
+   return render_template('board/image.html')
+
+@BP.route('/intro')
+def intro():
+   return render_template('board/intro.html')
+
 @BP.route('/v')
 def postpage():
    return render_template('board/postpage.html')
@@ -99,6 +111,9 @@ def get_board(board_url):
 
 		#관리자이면?
 		if check_admin(g.db, user['user_id']):
+			if board_url in {'대외활동', '대외활동_공모전', '대외활동_취업'}:
+				board['board_access'] = 0
+			else:
 				board['board_access'] = 1
 		#일반 유저이면?
 		else:

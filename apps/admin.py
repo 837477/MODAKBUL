@@ -13,6 +13,11 @@ IMG_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
 ACCESS_DENIED_TAG = {'ADMIN', '갤러리', '공모전', '공지', '블랙리스트', '비밀글', '대외활동', '외부사이트', '장부', '취업', '학생회소개'}
 ACCESS_DENIED_BOARD = ['공지', '갤러리', '학생회소개', '통계', '대외활동', '대외활동_공모전', '대외활동_취업', '투표', '장부']
 #######################################################
+#페이지 URL#############################################
+@BP.route('/settings')
+def settings():
+   return render_template('admin/settings.html')
+#######################################################
 #관리자 기능#############################################
 
 #게시판 추가/수정 (OK)
@@ -459,9 +464,10 @@ def update_tag_():
 	return jsonify(result = result)
 
 #로그 검색 (미사용)
-@BP.route('/search_log', methods=['POST'])
-@jwt_required
-def search_log():
+@BP.route('/search_log/<string:input_str>')
+#@jwt_required
+def search_log(input_str):
+	'''
 	user = select_user(g.db, get_jwt_identity())
 	if user is None: abort(400)
 
@@ -471,12 +477,13 @@ def search_log():
 	#관리자 아니면 접근 거절!
 	if not check_admin(g.db, user['user_id']): 
 		abort(400)
+	'''
 
 	result = {}
 	
-	input_str = request.form['input_str']
+	#input_str = request.form['input_str']
 
-	topic_list = input_str.split(' ')
+	topic_list = input_str.split('_')
 
 	result_log = select_log(g.db, topic_list)
 

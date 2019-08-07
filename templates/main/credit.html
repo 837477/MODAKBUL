@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>세종대학교 소프트웨어융합대학</title>
+    <meta name="keywords" content="세종대학교,소프트웨어융합대학,소융대">
+    <meta name="author" content="Team IML">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 모바일 브라우저 상태바 컬러 -->
+    <meta name="theme-color" content="#323639">
+    <!-- 모닥불 shortcut 아이콘 -->
+    <link rel="icon" type="image/png" href="/static/image/SoftwareLOGO.png">
+    <link rel="apple-touch-icon-precomposed" type="image/png" href="/static/image/SoftwareLOGO.png">
+    <!-- 아이콘 -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+    <!--custom css-->
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+    <style>
+    @font-face {
+        font-family: 'overwatch';
+        src: url('/static/fonts/koverwatch.woff');
+    }
+</style>
+</head>
+
+
+<body class="M_credit_body">
+	<!--background-->
+	<div class="M_credit_background_square">
+		<div class="M_credit_background_square1"></div>
+		<div class="M_credit_background_square2"></div>
+	</div>
+
+	<!--Title-->
+	<div style="position: relative; width: 100%; height: 120px;"></div>
+	<div class="M_credit_title_background1">MODAKBUL</div>
+	<div class="M_credit_title">모닥불 프로젝트</div>
+	<div class="M_credit_line"></div>
+
+	<!--워드클라우드-->
+	<div class="M_credit_wordcloud_container">
+    	<div class="test M_credit_wordcloud_content"></div>
+	</div>
+
+	<!--Contact Us-->
+	<div style="position: relative; width: 100%; height: 120px;"></div>
+	<div class="M_credit_title_background2">Contact Us</div>
+	<div class="M_credit_title">Team IML</div>
+	<div class="M_credit_line"></div>
+	<div class="M_credit_contactus_container">
+		<div class="M_credit_Team_git">
+			<div class="M_credit_mail_title">
+				<i class="far fa-envelope"></i>
+			</div>
+			<input type="text" id="send_mail_title" class="M_credit_mail" placeholder="제목을 입력해주세요.">
+			<textarea id="send_mail_body" class="M_credit_mail_body" placeholder="내용을 입력해주세요"></textarea>
+			<div class="M_credit_mail_send" onclick="modakbul_git_mail()">보내기</div>
+			<div class="M_empty_div"></div>
+			<i class="fab fa-github M_credit_a_tag" onclick="window.open('https://github.com/837477/MODAKBUL','_blank')"></i>
+			<div class="M_credit_a_tag_text">MODAKBUL Git</div>
+			<div class="M_credit_team_git_container">
+				<div class="M_credit_team_git_container_inbody">
+					<img src="/static/image/IML.png" onclick="window.open('https://github.com/iml1111','_blank')" class="M_credit_team_git_container_inbody_image">
+					<div class="M_credit_a_tag_text">IML</div>
+				</div>
+				<div class="M_credit_team_git_container_inbody">
+					<img src="/static/image/837477.png" onclick="window.open('https://github.com/837477','_blank')" class="M_credit_team_git_container_inbody_image">	
+					<div class="M_credit_a_tag_text">837477</div>
+				</div>
+				<div class="M_credit_team_git_container_inbody">
+					<img src="/static/image/NB.png" onclick="window.open('https://github.com/altmshfkgudtjr','_blank')" class="M_credit_team_git_container_inbody_image">
+					<div class="M_credit_a_tag_text">NB</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--License-->
+	<div style="position: relative; width: 100%; height: 120px;"></div>
+	<div class="M_credit_title_background3">License</div>
+	<div class="M_credit_title">라이센스</div>
+	<div class="M_credit_line"></div>
+
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">MODAKBUL</div> : Copyright&copy; 2019 Team IML<div class="M_credit_license_url">(https://github.com/837477/MODAKBUL)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Intro page</div> : Copyright&copy;2017 Julian Garnier MIT License
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">jQuery ColorPicker</div> : THE BEER-WARE LICENSE<div class="M_credit_license_url">(tannern@gmail.com)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">WOW animation</div> : Copyright&copy;2016 CoDeveloped by Thomas Grainger<div class="M_credit_license_url">(https://wowjs.uk)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Interactive Landscape</div> Copyright&copy;2018 Codrops<div class="M_credit_license_url">(http://www.codrops.com)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Isometric Grids</div> : Copyright&copy;2018 Codrops <div class="M_credit_license_url">(http://www.codrops.com)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">SortableJS</div> : Copyright&copy;2019<div class="M_credit_license_url">(http://sortablejs.github.io/Sortable/#comparisons)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Vote Animation</div> : Copyright&copy; 2019 Modernizr 2.6.2<div class="M_credit_license_url">(http://modernizr.com)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Bootstrap</div> : Copyright&copy; 2011-2018 Bootstrap v4.1.0 <div class="M_credit_license_url">(https://getbootstrap.com/)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Fontawesome</div> : Copyright&copy; 2019 Fontawesome 4.7.0<div class="M_credit_license_url">(fontawesome.com)</div>
+	</div>
+	<div class="M_credit_license">
+		<div class="M_credit_license_name">Chart JS</div> : Copyright&copy; 2019 Chart.js is open source and available under the MIT license.<div class="M_credit_license_url">(https://www.chartjs.org/docs/latest/)</div>
+	</div>
+	<div class="M_empty_div"></div>
+	<div class="M_credit_return_button" onclick="modakbul_credit_return_button()">
+		<i class="fas fa-undo"></i>
+	</div>
+</body>
+
+
+
+<!-- JQuery JS -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<!--animation-->
+<script src="/static/js/scroll/wow.min.js"></script>
+<script>new WOW().init();</script>
+<!--word cloud script-->
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://rawgit.com/jasondavies/d3-cloud/master/build/d3.layout.cloud.js" type="text/JavaScript"></script>
+<script src="/static/js/wordcloud.js"></script>
+<script src="/static/js/word_cloud.js"></script>
+<!--user JS-->
+<script src="/static/js/scroll_progressbar.js"></script>
+<script src="/static/js/credit.js"></script>
+</html>

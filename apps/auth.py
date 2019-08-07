@@ -10,7 +10,7 @@ BP = Blueprint('auth', __name__)
 #페이지 URL#############################################
 @BP.route('/sign-in')
 def sign_in():
-	return render_template('auth/index.html')
+	return render_template('auth/login.html')
 
 #######################################################
 #회원 기능###############################################

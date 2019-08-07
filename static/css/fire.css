@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css?family=Do+Hyeon&display=swap&subset=korean');
+
+body{
+  background:#133;
+}
+.fir_all_contain {
+  position: absolute;
+  left: 45%;
+  transform: translate(-50%, 0);
+  cursor: pointer;
+}
+@media (min-width: 2501px) {
+  .fir_all_contain {
+    position: absolute;
+    left: 47%;
+    transform: translate(-50%, 0);
+    cursor: pointer;
+  }
+}
+@media (min-width: 1400px; max-width: 2500px;) {
+  .fir_all_contain {
+    position: absolute;
+    left: 45%;
+    transform: translate(-50%, 0);
+    cursor: pointer;
+  }
+}
+@media (max-width: 1023px) {
+  .fir_all_contain {
+    position: absolute;
+    left: 40%;
+    transform: translate(-50%, 0);
+    cursor: pointer;
+  }
+}
+@media (max-width: 767px) {
+  .fir_all_contain {
+    position: absolute;
+    left: 34%;
+    transform: translate(-50%, 0);
+    cursor: pointer;
+  }
+}
+
+.fire_container{
+  position: absolute;
+  width:40px;
+  height:40px;
+  margin:3px auto;
+  top: 4px;
+  left: 0px;
+}
+.fire_logo {
+  position: absolute;
+  top:0;
+  width: 120px;
+  left: 60px;
+  font-weight: 300;
+  font-family: 'Do Hyeon', sans-serif;
+  font-size: 20px;
+  color: #545454;
+}
+#flame-1{
+  height:20px;
+  width:20px;
+  background:#ff7200;
+  position:relative;
+  top:-20px;
+  left:-4px;
+  margin:8px 18px;
+  border-radius:0% 50% 70% 50%;
+  transform:rotateZ(45deg) scale(1.1);
+  filter: drop-shadow(0 0 10px #d43322);
+  animation:scale-alternate 2s ease-in-out infinite;
+}
+#flame-2{
+  height:15px;
+  width:15px;
+  background:#ef5a00;
+  position:relative;
+  top:5px;
+  left:-10px; 
+  margin:8px 18px;
+  border-radius:0% 40% 60% 40%;
+  transform:scaleX(0.8) rotatez(45deg);
+  filter: drop-shadow(0 0 10px #d43322);
+  animation: scale-up 2s ease-in-out infinite;
+}
+
+#flame-3{
+  height:15px;
+  width:15px;
+  background:#ef5a00;
+  position:relative;
+  top:-46px;
+  left:6px; 
+  margin:8px 18px;
+  border-radius:0% 40% 60% 40%;
+  transform:scaleX(0.8) rotatez(45deg);
+  filter: drop-shadow(0 0 10px #d43322);
+  animation: scale-up-3 3s ease-in-out infinite;
+}
+.fire_wood{
+  width:3px;
+  height:30px;
+  background:#563111;
+  border-radius:5px;
+  }
+#wood-1{
+  transform:rotate(72deg);
+  position:relative;
+  top:-91px;
+  left:22.5px;
+}
+
+#wood-2{
+  transform:rotate(106deg);
+  position:relative;
+  top:-121px;
+  left:22.5px;
+}
+.fire_small-element{
+  height:7px;
+  width:7px;
+  border-radius:50%;
+  background: rgba(0,0,0,0);  
+  position:relative;
+  top:-42px;
+  left:50px;
+}
+.fire_fire-bottom .fire_main-fire {
+  position: relative;
+  top: -80px;
+  left: 22px;
+  width: 16px;
+  height: 16px;
+  background-color: rgba(0,0,0,0);
+  transform: scaleX(0.8) rotate(45deg);
+  border-radius: 0 40% 100% 40%;
+  filter: blur(8px);
+  animation: glow 2s ease-out 0;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+@keyframes glow{
+  0%,100%{background:#ef5a00;}
+  50%{background:#ff7800;}
+}
+@keyframes scale-up-3{
+  0%,100%{transform:scale(1.1) rotatez(45deg);}
+  40%,90%{transform:scale(0.96) rotatez(45deg);}
+  30%,75%{transform:scale(0.90) rotatez(45deg);}
+}
+@keyframes scale-up{
+  0%,100%{transform:scale(1) rotatez(45deg);}
+  40%,90%{transform:scale(0.96) rotatez(45deg);}
+  30%,75%{transform:scale(0.90) rotatez(45deg); }
+}
+@keyframes scale-alternate{
+  0%,100%{transform:scale(1.1) rotatez(45deg);}
+  30%,90%{transform:scale(0.90) rotatez(45deg);}
+  45%,60%{transform:scale(0.96) rotatez(45deg);}
+  50%,75%{transform:scale(0.97) rotatez(45deg);}
+}
+@keyframes particle-up{
+  0%{
+    top:-40px;
+    left:110px;
+  }
+  100%{
+    position:relative;
+    opacity:0.8;
+    top:-70px;
+    left:145px;
+    transform:scale(0.1); 
+  }
+}

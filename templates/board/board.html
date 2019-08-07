@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>세종대학교 소프트웨어융합대학</title>
+	<meta name="keywords" content="세종대학교,소프트웨어융합대학,소융대">
+	<meta name="author" content="Team IML">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+	<!-- 모바일 브라우저 상태바 컬러 -->
+	<meta name="theme-color" content="white">
+	<!-- 모닥불 shortcut 아이콘 -->
+	<link rel="icon" type="image/png" href="/static/image/SoftwareLOGO.png">
+	<link rel="apple-touch-icon-precomposed" type="image/png" href="/static/image/SoftwareLOGO.png">
+	<!-- 아이콘 -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+	<!--CSS-->
+	<link href="/static/css/style.min.css" rel="stylesheet">
+	<!--side menu-->
+	<link rel="stylesheet" type="text/css" href="/static/css/sidemenu/demo.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/sidemenu/component.css" />
+	<!--fire animation css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/fire.css">
+	<!--animation css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/animation/animate.css">
+	<!--color-->
+	<link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+	<!--post_menu_button-->
+	<link rel="stylesheet" type="text/css" href="/static/css/post_menu_button.css">
+	<!--textarea editor-->
+	<link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css" rel="stylesheet">
+	<link href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.12/summernote.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.css">
+	<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/theme/monokai.css">
+	<!--custom css-->
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+</head>
+
+
+
+<body class="M_white_theme" onload="setTheme(); get_user_info();">
+	<!--Side Menu : necessary-->
+	<div id="M_nav_container" class="container M_sidemenu">
+		<ul id="gn-menu" class="gn-menu-main M_boxshadow">
+			<!--nav bar 메인 로고-->
+			<div id="logo_change_target_logo" class="M_nav_bar_logo_container display_none_important" onclick="location.href='/'" onmouseenter="EE_change_logo_to_fire($(this))" onmouseleave="EE_return_logo()">
+				<div class="M_nav_bar_logo_image">
+					<img id="M_nav_bar_logo_image_img" src="#" class="M_nav_bar_logo_image_img">
+				</div>
+			</div>
+        	<a id="logo_change_target_fire" class="fir_all_contain display_none_important" href="/" onmouseenter="EE_chage_logo_to_logo($(this))"  onmouseleave="EE_return_logo()">
+        	    <div class = "fire_container">
+        	        <div class = "fire_flame" id = "flame-2"></div>
+        	        <div class = "fire_flame" id = "flame-1"></div>
+        	        <div class = "fire_flame" id = "flame-3"></div>
+        	        <div class = "fire_small-element"></div>
+        	        <div class = "fire_small-element"></div>
+        	        <div class = "fire_fire-bottom">
+        	            <div class = "fire_main-fire"></div>
+        	        </div>
+        	        <div class = "fire_wood" id = "wood-1"></div>
+        	        <div class = "fire_wood" id = "wood-2"></div>
+        	    </div>
+        	    <div id="M_fire_logo" class="fire_logo">MODAKBUL</div>
+        	</a>
+			<!--사이드 메뉴-->
+			<li class="gn-trigger">
+				<a id="M_gn-icon" class="gn-icon gn-icon-menu" style="padding-left : 20px"><span>Menu</span></a>
+				<nav id="gn-menu-wrapper" class="gn-menu-wrapper M_boxshadow_sidemenu">
+					<div id="gn-scroller" class="gn-scroller">
+					</div>
+				</nav>
+			</li>
+			<!--검색버튼-->
+			<li onclick="M_search_bar_on()">
+				<a><i id="M_search_icon" class="fas fa-search"></i></a>
+				<div id="M_search_bar" class="M_search_bar wow display_none" data-wow-duration = "0.4s">
+					<input id="M_search_input" type="text" name="search_about" autocomplete="off" onkeyup="search_enter()">
+				</div>
+			</li>
+			<!--유저버튼-->
+			<li id="M_nav_user" class="gn-trigger" onclick="M_dropdown_user()">
+				<a><i class="fas fa-user" style="padding: 0 10px;"></i></a>
+				<!--로그인시-->
+				<div id="M_nav_user_login" class="M_nav_user M_boxshadow_user display_none">
+					<div>
+						<div class="M_user_img_container">
+							<div id="M_user_img" class="M_user_img" onclick="user_color_select_page_open()"><i class="fas fa-cog"></i></div>
+						</div>
+						<div class="M_user_info_container">
+							<h4 id="M_user_content_name">Welcome</h4>
+							<p id="M_user_content_major" class="M_user_introduce" style="height: auto;">To</p>
+							<p id="M_user_content_number" class="M_user_introduce">Soyung</p>
+						</div>
+					</div>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="user_logout()">로그아웃</a>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="changeTheme()"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+				</div>
+				<!--비로그인시-->
+				<div id="M_nav_user_nologin" class="M_nav_user M_boxshadow_user M_nav_user_nologin display_none">
+					<a class="M_nav_user_button" href="/sign-in">로그인</a>
+					<div class="M_nav_border"></div>
+					<a class="M_nav_user_button" onclick="changeTheme()"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
+				</div>
+			</li>
+		</ul>
+	</div>
+	<!--color div-->
+	<div id="M_user_color_selector_container_modal" class="M_user_color_selector_container_modal display_none"></div>
+	<div id="M_user_color_selector_container" class="M_info_div M_boxshadow M_user_color_selector_container animated display_none wow" data-wow-duration = "0.4s">
+		<div id="M_user_color_selected_label" class="user_color_selected_change M_user_color_selected_label"></div>
+		<div id="colorpicker_wrapper" class="M_colorpicker_wrapper">
+       	 	<div id="colorpicker"></div>
+		</div>
+		<div class="user_color_selector_info_container">
+			<div class="user_color_selector_info_title M_font_bold">미리보기</div>
+			<div class="M_info_div M_boxshadow">
+				<div class="user_color_selector_info_content">
+					<div class="user_color_selector_info_content_label user_color_selected_change"></div>
+					<div id="user_color_selector_info_content_name" class="user_color_selector_info_content_name"></div>
+				</div>
+			</div>
+		</div>
+		<div class="M_user_color_select_choice_container">
+			<div class="M_user_color_select_choice" onclick="user_color_select_ok()" style="border-right: 1px solid #e2e2e2">적용</div>
+			<div class="M_user_color_select_choice" onclick="user_color_select_cancel()">취소</div>
+		</div>
+	</div>
+	<div class="M_body">
+	<!--Body-->
+		<div class="M_board_tag_container">
+		</div>
+		<div class="M_board_contents_container">
+		</div>
+	</div>
+	<!--Post modal-->
+	<div id="M_user_post_modal_background" class="M_user_post_modal_background animated wow display_none" data-wow-duration = "0.4s">
+		<div id="M_user_post_modal_container" class="M_info_div M_user_post_modal_container animated wow M_boxshadow display_none" data-wow-duration = "0.4s">
+			<div class="M_post_top_container">
+				<div id="M_post_profile_color" class="M_post_profile_color"></div>
+            	<div id="M_post_author" class="M_post_author"></div>
+            	<div id="M_post_time" class="M_post_time"></div>
+			</div>
+			<div id="M_post_top_heart" class="M_post_top_heart" onclick="post_like_button()"><i class="fas fa-heart"></i></div>
+			<div id="M_post_top_title" class="M_post_top_title"></div>
+			<div id="M_post_body" class="M_post_body"></div>
+			<div class="M_post_body_line"></div>
+			<div id="M_post_body_image_container" class="M_post_body_scroll_container">
+			</div>
+			<div id="M_post_body_attachment_container" class="M_post_body_scroll_container">
+			</div>
+			<div class="M_post_body_icon_container">
+				<i class="fas fa-eye M_post_body_icons"></i>
+				<span id="M_post_body_icons_view" class="M_post_body_icons_data"></span>
+				<i class="fas fa-heart M_post_body_icons"></i>
+				<span id="M_post_body_icons_like" class="M_post_body_icons_data"></span>
+				<i class="fas fa-comment M_post_body_icons"></i>
+				<span id="M_post_body_icons_comment" class="M_post_body_icons_data"></span>
+			</div>
+			<div class="M_post_body_share">
+				<i id="M_post_url_copy" class="fas fa-share-square" onclick="clipboardCopy(this)"></i>
+			</div>
+			<div class="M_post_body_line"></div>
+			<div id="comment_target">
+			</div>
+			<div class="M_comment_bottom_empty"></div>
+		</div>
+		<div id="M_post_user_comment_container" class="M_post_user_comment_container_fixed">
+			<div id="M_post_user_comment_anony_container" class="M_post_user_comment_anony_container">
+				<span>익명</span>
+				<label class="CB_switch_comment">
+					<input id="M_post_user_comment_anony" type="checkbox">
+					<span class="CB_slider_comment CB_round_comment"></span>
+				</label>
+			</div>
+			<input type="text" id="M_post_user_comment_input" class="M_post_user_comment_input" placeholder="댓글을 입력해주세요." onkeyup="comment_enter()" autocomplete="off">
+		</div>
+	</div>
+	<!--menu control button-->
+	<div id="M_menu_button_container" class="display_none_important">
+		<div id='ss_menu'>
+		  <div id="M_menu_button_write" onclick="post_write()"> <i class="fas fa-plus"></i> </div>
+		  <div id="M_menu_button_trash" class="display_none_important" onclick="post_delete()"> <i class="fas fa-trash-alt"></i> </div>
+		  <div id="M_menu_button_modify" class="display_none_important" onclick="post_modify()"> <i class="fas fa-pen-nib"></i> </div>
+		  <div></div>
+		  <div class='menu'>
+		    <div class='share' id='ss_toggle' data-rot='180'>
+		      <div class='circle'></div>
+		    </div>
+		  </div>
+		</div>
+	</div>
+	<!--imagemodal-->
+	<div id="M_image_modal_background" class="M_image_modal_background display_none animated wow" onclick="image_modal_close()" data-wow-duration = "0.4s">
+		<img id="M_image_modal_container" src="/static/image/foot.png" class="M_image_modal_container" onclick="image_modal_close()">
+	</div>
+	<!--Page footer-->
+	<div class="M_footer">
+		<img src="/static/image/foot.png" class="M_footer_img">
+		<p class="M_footer_p">010-7393-3434 | sejong1sc@gmail.com | 학생회관 409호<br>COPYRIGHT ⓒ 2019 Team IML</p>
+	</div>
+	<!--post control modal-->
+	<div id="M_user_post_modal_background_fixed" class="M_user_post_modal_background_fixed display_none wow animated" data-wow-duration = "0.4s"></div>
+	<div id="M_user_post_modal_container_fixed" class="M_info_div M_boxshadow M_user_post_modal_container_fixed animated display_none wow" data-wow-duration = "0.4s">
+			<h1 class="M_post_fixed_info">포스트 작성</h1>
+			<h4 class="M_post_fixed_title">제목</h4>
+			<input type="text" id="M_post_fixed_title_input" class="M_post_fixed_title_input" placeholder="제목을 입력해주세요." autocomplete="off" maxlength="100" required="">
+			<h4 class="M_post_fixed_title">내용</h4>
+			<div id="summernote"></div>
+			<div class="M_filebox">
+				<label for="files_upload" class="M_filebox">업로드</label> 10개까지 등록할 수 있습니다.
+				<input type="file" id="files_upload" multiple="multiple" class="M_post_fixed_attachment" max-10 maxlength="10" data-maxsize="50000000" onchange="javascript:document.getElementById('M_file_route').value=this.value">
+				<div id="M_file_route" class="M_file_route">
+				</div>
+			</div>
+			<div class="M_post_checkbox_container">
+				<span>비밀글</span>
+				<label class="CB_switch" style="margin-right: 20px">
+					<input id="M_post_user_post_secret" type="checkbox">
+					<span class="CB_slider CB_round"></span>
+				</label>
+				<span>익명글</span>
+				<label class="CB_switch">
+					<input id="M_post_user_post_anony" type="checkbox">
+					<span class="CB_slider CB_round"></span>
+				</label>
+			</div>
+			<div class="M_user_post_modal_container_fixed_choice_container">
+				<div class="M_user_post_modal_container_fixed_choice" onclick="post_write_accept()" style="border-right: 1px solid #e2e2e2">적용</div>
+				<div class="M_user_post_modal_container_fixed_choice" onclick="post_write_cancel()">취소</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+
+
+<!-- JQuery JS -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<!-- Identification JS -->
+<script src="/static/js/pnglib.js"></script>
+<!-- AJAX JS -->
+<script src="/static/js/ajax.js"></script>
+<!-- Snackbar JS -->
+<script src="/static/js/snackbar.js"></script>
+<!--side menu-->
+<script src="/static/js/sidemenu/modernizr.custom.js"></script>
+<script src="/static/js/sidemenu/classie.js"></script>
+<script src="/static/js/sidemenu/gnmenu.js"></script>
+<script src="/static/js/sidemenu/dropdown.js"></script>
+<script>new gnMenu( document.getElementById( 'gn-menu' ) );</script>
+<!--animation-->
+<script src="/static/js/scroll/wow.min.js"></script>
+<script>new WOW().init();</script>
+<!--user color JS-->
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
+<script src="/static/js/color/jquery.colorpicker.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/color/usercolor.js"></script>
+<!--post_menu_button JS-->
+<script src="/static/js/post_menu_button.js"></script>
+<!--post editor JS-->
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.12/summernote.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/codemirror.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.20.0/mode/xml/xml.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/codemirror/2.36.0/formatting.js"></script>
+<!--multifile JS-->
+<script src="/static/js/multifile/jquery.MultiFile.min.js"></script>
+<!--custom JS-->
+<script src="/static/js/test_url.js"></script>
+<script src="/static/js/login.js"></script>
+<script src="/static/js/themeChange.js"></script>
+<script src="/static/js/board.js"></script>
+<script src="/static/js/sidebar.js"></script>
+<script src="/static/js/postmodal.js"></script>
+<script src="/static/js/historyback.js"></script>
+<script src="/static/js/navigation.js"></script>
+<script>
+	M_summernote_change();
+	$(document).ready(function() {
+	  $('#summernote').summernote({
+	  	fontNames: ['NanumGothic', 'sans-serif', 'serif'],
+        placeholder: '내용을 입력해주세요.',
+        tabsize: 2,
+        minHeight: 450,
+        maxHeight: 450,
+        height: 450,
+        toolbar: [
+  		// [groupName, [list of button]]
+  		['style', ['bold', 'italic', 'underline', 'clear']],
+  		['fontsize', ['fontsize']],
+  		['color', ['color']],
+  		['undo', ['undo']]
+  		],
+  		callbacks: {
+  			onInit: function() {
+  				M_summernote_init();
+  			}
+  		}
+      });
+      $("input[type=file]").change(function () {
+            let fileInput = document.getElementById("files_upload");
+            let files = fileInput.files;
+            let file;
+            let string = "";
+            for (let i = 0; i < files.length; i++) {
+                file = files[i];
+                string += file.name;
+                string += " / ";
+            }
+            $('#M_file_route').empty();
+            $('#M_file_route').append(string);
+        });
+	});
+</script>
+</html>
