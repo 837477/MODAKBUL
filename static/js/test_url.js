@@ -1,1 +1,0 @@
-var TEST_IP = "/";
