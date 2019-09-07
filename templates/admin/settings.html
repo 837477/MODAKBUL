@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <title>세종대학교 소프트웨어융합대학</title>
     <meta name="keywords" content="세종대학교,소프트웨어융합대학,소융대">
@@ -42,7 +42,7 @@
        <!--nav bar 메인 로고-->
             <div id="logo_change_target_logo" class="M_nav_bar_logo_container display_none_important" onclick="location.href='/'" onmouseenter="EE_change_logo_to_fire($(this))" onmouseleave="EE_return_logo()">
                 <div class="M_nav_bar_logo_image">
-                    <img id="M_nav_bar_logo_image_img" src="#" class="M_nav_bar_logo_image_img">
+                    <img id="M_nav_bar_logo_image_img" src="/static/image/modakbulLOGO.png" class="M_nav_bar_logo_image_img">
                 </div>
             </div>
             <a id="logo_change_target_fire" class="fir_all_contain display_none_important" href="/" onmouseenter="EE_chage_logo_to_logo($(this))"  onmouseleave="EE_return_logo()">
@@ -76,8 +76,8 @@
             </div>
         </li>
         <!--유저버튼-->
-        <li id="M_nav_user" class="gn-trigger" onclick="M_dropdown_user()">
-            <a><i class="fas fa-user" style="padding: 0 10px;"></i></a>
+        <li id="M_nav_user" class="gn-trigger">
+            <a onclick="M_dropdown_user()"><i class="fas fa-user" style="padding: 0 10px;"></i></a>
             <!--로그인시-->
             <div id="M_nav_user_login" class="M_nav_user M_boxshadow_user display_none">
                 <div>
@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="M_nav_border"></div>
-                <a class="M_nav_user_button" onclick="user_logout()">로그아웃</a>
+                <a class="M_nav_user_button" onclick="user_logout_setting()">로그아웃</a>
                 <div class="M_nav_border"></div>
                 <a class="M_nav_user_button" onclick="changeTheme(); change_setting_theme();"><i id="M_theme" class="M_theme fas fa-moon"></i></a>
             </div>
@@ -165,7 +165,7 @@
                     로고 변경
                 </div>
             </div>
-            <img id="M_image_preview" onclick="upload_logo()" src="#" class="M_setting_logo_image">
+            <img id="M_image_preview" onclick="upload_logo()" src="/static/image/modakbulLOGO.png" class="M_setting_logo_image">
             <input type="file" id="M_logo_upload" style="display: none;">
             <div class="M_image_warning">
                 로고는 160x160 사이즈로 업로드해주시기 바랍니다.
@@ -180,7 +180,7 @@
                 </div>
             </div>
             <div>
-                <input id="M_union_name"class="M_union_info_input" type="text">
+                <input id="M_union_name"class="M_union_info_input" type="text" autocomplete="off">
             </div>
             <div class="M_settings_subtitle_wrapper">
                 <div class="M_setting_tag">
@@ -190,7 +190,7 @@
                 </div>
             </div>
             <div>
-                <input id="M_union_subtitle" class="M_union_info_input" type="text">
+                <input id="M_union_subtitle" class="M_union_info_input" type="text" autocomplete="off">
             </div>
         </div>
         <div class="M_settings_subtitle_wrapper">
@@ -267,8 +267,8 @@
                 </div>
             </div>
             <div class="M_user_search_wrapper">
-                <input class="M_user_search" type="text" placeholder="홍길동" autocomplete="off">
-                <div onclick="search_user()" class="M_user_search_button">
+                <input class="M_user_search" type="text" placeholder="홍길동" autocomplete="off" onkeyup="search_user_list_realtime($(this))">
+                <div class="M_user_search_button">
                     <i style="margin-left: 3%;" class="fas fa-search"></i>
                 </div>
                 <div>* 학번 혹은 이름으로 검색해주세요.</div>
@@ -337,12 +337,13 @@
             </div>
             <div class="M_nav_add">
             </div>
-            <div>
-                <input id="M_new_board_name" class="M_new_board_name" type="text" placeholder="게시판 이름을 입력하세요.">
-            </div>
+            <input id="M_new_board_name" class="M_new_board_name" type="text" placeholder="게시판 이름을 입력하세요." autocomplete="off">
             <div onclick="create_board()" class="M_nav_submit">
                 생성
             </div>
+        </div>
+        <div class="M_setting_menu_control_warning_container">
+            ※ 작은 메뉴를 만들시, 큰 메뉴를 먼저 만들어주세요.
         </div>
     </div>
 
@@ -387,21 +388,26 @@
             <div class="M_password_info">
                 이전 비밀번호
             </div>
-            <input id="prev_pw" class="M_password_input" type="password">
+            <input id="prev_pw" class="M_password_input" type="password" autocomplete="off">
         </div>
         <div class="M_password_wrapper">
             <div class="M_password_info">
                 새 비밀번호
             </div>
-            <input id="new_pw" class="M_password_input" type="password">
+            <input id="new_pw" class="M_password_input" type="password" autocomplete="off">
         </div>
         <div class="M_password_wrapper">
             <div class="M_password_info">
                 새 비밀번호 확인
             </div>
-            <input id="new_pw_confirm" class="M_password_input"  type="password">
+            <input id="new_pw_confirm" class="M_password_input"  type="password" autocomplete="off">
         </div>
     </div>
+</div>
+<div id="M_loading_modal_background" class="M_loading_modal_background wow animated" data-wow-duration = "0.4s">
+    <div class="M_loading_modal_content1"></div>
+    <div class="M_loading_modal_content2"></div>
+    <div class="M_loading_modal_content_p">잠시만 기다려주세요</div>
 </div>
 </body>
 
@@ -437,7 +443,7 @@
 <script src="/static/js/login.js"></script>
 <script src="/static/js/themeChange.js"></script>
 <script src="/static/js/sidebar.js"></script>
-<script src="/static/js/setting.js"></script>
 <script src="/static/js/drag_drop.js"></script>
-<script src="/static/js/navigation.js"></script>
+<script src="/static/js/setting.js"></script>
+<script src="/static/js/check_action.js"></script>
 </html>
