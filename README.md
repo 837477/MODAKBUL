@@ -8,13 +8,12 @@
 >
 > 본 프로젝트는 해당 공모전에서 "대상"을 수여한 작품이다.
 >
-> 자세한 내용은 "[세종대학교 소프트웨어융합대학 메인 홈페이지 MODAKBUL !](https://837477.github.io/posts/modakbul/post.html)"을 참고하길 바랍니다.
 
 
 
-## Functions Index
+## Reference
 
-1. 커뮤니티 게시글 수집
+- [세종대학교 소프트웨어융합대학 메인 홈페이지 MODAKBUL !](https://837477.github.io/posts/modakbul/post.html)
 
 
 
@@ -37,7 +36,7 @@ python3 app.py
 ## Release History
 
 * 1.0
-  * First initialization
+    * First initialization
 
 
 
